@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["referentialIntegrity"]
+}
+
+datasource db {
+  provider             = "mysql"
+  url                  = env("DATABASE_URL")
+  referentialIntegrity = "prisma"
+}
+
+// because PlanetScale does not support foreign key constraints and 
+// Prisma defautls to using foreign keys to express relations,
+// we need to set this "referentialIntegrity" property 
+// when using Prisma with PlanetScale
+
+// “Referential integrity is a property of a data set that states 
+// that all its references are valid. Referential integrity requires 
+// that if one record references another, then the referenced record 
+// must exist. For example, if a Post model defines an author, then 
+// the author must also exist.“ 
+
+enum Auth {
+  user
+  admin
+  kitchen
+  bar
+}
+
+
+model User {
+  id              String         @id @default(cuid())
+  firstName       String
+  lastName        String
+  alias           String?
+  password        String         @unique
+  auth            String         @default("user")
+  locked          Boolean        @default(false)
+  juiceRequested  JuiceRequest[] @relation("UserOnRequest")
+  dishEdited      Dish[]         @relation("UserOnDish") // many dishes can be edited by one user
+
+  @@unique([firstName, lastName, password])
+}
+
+model Task {
+  id           String   @id @default(cuid())
+  name         String
+  description  String
+  createdAt    DateTime @default(now())
+  lastEdited   DateTime @updatedAt
+  priority     Int
+  assignedToId String
+}
+
+model Day {
+  id             String   @id @default(cuid())
+  startingCovers Int
+  endingCovers   Int
+  date           DateTime @default(now())
+  totalSales     Int
+  totalTips      Int
+  weather        String
+  notes          String
+}
+
+model Priority {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+}
+
+model JuiceRequest {
+  id                String   @id @default(cuid())
+  requestFrom       User     @relation(name: "UserOnRequest", fields: [requestFromId], references: [id])
+  requestFromId     String
+  lemonAmount       Float
+  orangeAmount      Float
+  grapefruitAmount  Float
+  notes             String?
+  createdAt         DateTime @default(now())
+  lastEdited        DateTime @updatedAt
+}
+
+model Menu {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  dishes      Dish[] // one menu can have many dishes
+  menuSections MenuSection[] // one menu can have many menu sections
+}
+
+model MenuSection {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  dishes      Dish[] // one menu section can have many dishes
+  menus        Menu    @relation(fields: [menuId], references: [id]) // a menu section can only belong to one menu
+  menuId      String
+}
+
+model Dish {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  advertisedDescription String?
+  components Component[] // many components can belong to one dish
+  price       Float
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  lastEditedBy User    @relation(name: "UserOnDish", fields: [lastEditedById], references: [id]) // a dish can only be edited by one user
+  lastEditedById String
+  menu        Menu[] // a dish can belong to many menus
+  menuSection MenuSection[] // a dish can belong to many menu sections
+  imageId     String
+}
+
+model Component {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  removable   Boolean
+  allergens    Allergen[] // many components can have many allergies
+  ingredients Ingredient[] // many components can have many ingredients
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  dish        Dish     @relation(fields: [dishId], references: [id]) // a component can only belong to one dish
+  dishId      String 
+}
+
+model Allergen {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  components  Component[] // many components can have many allergies
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+}
+
+model Ingredient {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  components  Component[] // many components can have many ingredients
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+}
