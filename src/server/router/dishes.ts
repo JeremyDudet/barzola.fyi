@@ -18,17 +18,7 @@ import { z } from 'zod'
 export const dishesRouter = createRouter()
   .query("getDishes", {
     async resolve({ ctx }) {
-      return await ctx.prisma.dish.findMany({
-        include: {
-          components: {
-            include: {
-              allergens: true
-            }
-          },
-          menuSection: true,
-          menu: true,
-        },
-      });
+      return await ctx.prisma.dish.findMany();
     }
   })
   .mutation("deleteDish", {
@@ -90,29 +80,37 @@ export const dishesRouter = createRouter()
       return dish
     }
   })
-  // .mutation("createDish", {
-  //   // validate input with Zod
-  //   input: z.object({ 
-  //     name: z.string(), 
-  //     description: z.string(), 
-  //     price: z.number(), 
-  //     components: z.array(z.object({
-  //       id: z.string(),
-  //       name: z.string(),
-  //       description: z.string(),
-  //       removable: z.boolean(),
-  //       allergyInfo: z.array(z.string()),
-  //     })).optional(),
-  //   }),
-  //   async resolve({ ctx, input }) {
-  //     await ctx.prisma.dish.create({
-  //       data: {
-  //         name: input.name,
-  //         description: input.description,
-  //         price: input.price,
-  //         // components: input.components,          
-  //       },
-  //     })    
-  //   }
-  // })
+  .mutation("createDish", {
+    // validate input with Zod
+    input: z.object({ 
+      name: z.string(), 
+      description: z.string(), 
+      price: z.number(), 
+      imageId: z.string(),
+      menuSectionId: z.string(),
+      menuId: z.string(),
+      advertisedDescription: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      await ctx.prisma.dish.create({
+        data: {
+          name: input.name,
+          description: input.description,
+          advertisedDescription: input.advertisedDescription,
+          price: input.price,
+          menu: {
+            connect: {
+              id: input.menuId,
+            },
+          },
+          menuSection: {
+            connect: {
+              id: input.menuSectionId,
+            },
+          },
+          imageId: input.imageId,
+        },
+      })    
+    }
+  })
 

@@ -5,7 +5,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { trpc } from '../../utils/trpc'
-import { Heading, Stack, Flex, Button, Spinner, Center } from '@chakra-ui/react'
+import {
+  Heading,
+  Stack,
+  Flex,
+  Button,
+  Spinner,
+  Center,
+  useDisclosure
+} from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
 import SearchBar from '../../components/SearchBar'
 import DishCard from '../../components/DishCard'
@@ -13,17 +21,17 @@ import LoginForm from '../../components/LoginForm'
 import NewDishModal from '../../components/NewDishModal'
 import { useAuthContext } from '../../context/AuthContext'
 import type { Dish, NewDish } from '../../types'
-import UpdateFoodNoteModal from '../../components/UpdateFoodNoteModal'
 
 export default function Index() {
   const { user } = useAuthContext()
   const utils = trpc.useContext()
-  // const createDish = trpc.useMutation('dishes.createDish')
+  const createDish = trpc.useMutation('dishes.createDish')
   const getDishes = trpc.useQuery(['dishes.getDishes'])
   const updateDish = trpc.useMutation('dishes.updateDish')
-  const deleteDish = trpc.useMutation('dishes.deleteDish')
+  // const deleteDish = trpc.useMutation('dishes.deleteDish')
   const [search, setSearch] = useState<string>('')
   const [dishes, setDishes] = useState<Dish[] | undefined>()
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   // const handleDishDelete = useCallback(
   //   async (uid: string) => {
@@ -48,16 +56,16 @@ export default function Index() {
     })
   }
 
-  // const handleCreateDish = useCallback(
-  //   async (data: NewDish) => {
-  //     await createDish.mutateAsync(data, {
-  //       onSuccess: () => {
-  //         utils.invalidateQueries(['dishes.getDishes'])
-  //       }
-  //     })
-  //   },
-  //   [createDish, utils]
-  // )
+  const handleCreateDish = useCallback(
+    async (data: NewDish) => {
+      await createDish.mutateAsync(data, {
+        onSuccess: () => {
+          utils.invalidateQueries(['dishes.getDishes'])
+        }
+      })
+    },
+    [createDish, utils]
+  )
 
   if (!user.firstName) return <LoginForm /> // if user is not logged in, return Auth component
 
@@ -71,10 +79,20 @@ export default function Index() {
 
   return (
     <>
+      <NewDishModal
+        isOpen={isOpen}
+        onClose={onClose}
+        handleCreateDish={handleCreateDish}
+      />
       <Stack>
         <Flex justify="space-between">
           <Heading>{'Food Notes'}</Heading>
-          <Button variant="outline" leftIcon={<AddIcon />} colorScheme="green">
+          <Button
+            onClick={onOpen}
+            variant="outline"
+            leftIcon={<AddIcon />}
+            colorScheme="green"
+          >
             New Dish
           </Button>
         </Flex>

@@ -133,12 +133,12 @@ export interface Dish {
 }
 
 export interface NewDish {
-  id: string
   name: string
   description: string
+  advertisedDescription: string
   price: number
-  menu?: Menu
-  menuSection?: MenuSection
+  menuId?: Menu
+  menuSectionId?: MenuSection
   allergens?: Allergen[]
   imageId: string
 }
