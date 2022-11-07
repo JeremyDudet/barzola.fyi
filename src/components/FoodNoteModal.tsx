@@ -29,6 +29,8 @@ interface Props {
   onClose: () => void
 }
 
+const hello = 'name'
+
 // export interface Dish {
 //     id: string
 //     name: string
