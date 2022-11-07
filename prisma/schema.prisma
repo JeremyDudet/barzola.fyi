@@ -40,6 +40,8 @@ model User {
   auth            String         @default("user")
   locked          Boolean        @default(false)
   juiceRequested  JuiceRequest[] @relation("UserOnRequest")
+  editedDishes    Dish[]  // a user can edit many dishes
+  
 
   @@unique([firstName, lastName, password])
 }
@@ -91,7 +93,6 @@ model Menu {
   description String
   createdAt   DateTime @default(now())
   lastEdited  DateTime @updatedAt
-  dishes      Dish[] // one menu can have many dishes
   menuSections MenuSection[] // one menu can have many menu sections
 }
 
@@ -101,7 +102,6 @@ model MenuSection {
   description String
   createdAt   DateTime @default(now())
   lastEdited  DateTime @updatedAt
-  dishes      Dish[] // one menu section can have many dishes
   menus        Menu    @relation(fields: [menuId], references: [id]) // a menu section can only belong to one menu
   menuId      String
 }
@@ -114,10 +114,10 @@ model Dish {
   price       Float
   createdAt   DateTime @default(now())
   lastEdited  DateTime @updatedAt
-  menu        Menu[] // a dish can belong to many menus
-  menuSection MenuSection[] // a dish can belong to many menu sections
   imageId     String
   allergens   Allergen[] // a dish can have many allergens
+  lastEditedBy User @relation(fields: [lastEditedById], references: [id]) // a dish can only have one last editor
+  lastEditedById String
 }
 
 model Component {

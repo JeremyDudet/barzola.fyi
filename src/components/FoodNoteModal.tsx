@@ -139,7 +139,7 @@ export default function FoodNoteModal(props: Props) {
           <Stack>
             <Box as={'header'}>
               <Heading lineHeight={1.1} fontWeight={600} fontSize={'2xl'}>
-                {props.dish.name}
+                {props.dish.name.toUpperCase()}
               </Heading>
               <Text
                 color={useColorModeValue('gray.900', 'gray.400')}

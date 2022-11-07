@@ -102,9 +102,10 @@ export interface JuiceRequestUpdate {
 export interface Allergen {
   id: string
   name: string
-  description: string
-  components?: Component[]
+  description: string | null
   dishes?: Dish[]
+  createdAt: Date
+  lastEdited: Date
 }
 
 export interface Component {
@@ -137,10 +138,9 @@ export interface NewDish {
   description: string
   advertisedDescription: string
   price: number
-  menuId?: Menu
-  menuSectionId?: MenuSection
-  allergens?: Allergen[]
+  allergens: string[] | undefined
   imageId: string
+  lastEditedById: string
 }
 
 export interface MenuSection {

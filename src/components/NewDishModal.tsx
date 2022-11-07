@@ -21,26 +21,38 @@ import {
   Textarea,
   IconButton,
   Button,
-  Divider
+  Divider,
+  Checkbox,
+  CheckboxGroup,
+  Flex,
+  useToast
 } from '@chakra-ui/react'
+import { CloseIcon } from '@chakra-ui/icons'
 import { BiEdit } from 'react-icons/bi'
 import Image from 'next/image'
-import type { Dish } from '../types'
+import type { NewDish, Allergen } from '../types'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
-  handleDishUpdate: (data: Dish) => Promise<void>
-  dish: Dish
+  handleCreateDish: (data: NewDish) => Promise<void>
+  allergens: Allergen[]
+  uid: string
 }
 
 function UpdateFoodNoteModal(props: Props) {
   const [selectedFile, setSelectedFile] = useState<any | null>() // the image file
-  const [name, setName] = useState()
-  const [description, setDescription] = useState()
-  const [advertisedDescription, setAdvertisedDescription] = useState()
-  const [price, setPrice] = useState()
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [advertisedDescription, setAdvertisedDescription] = useState('')
+  const [price, setPrice] = useState(0)
+  const [allergens, setAllergens] = useState<any>([])
   const format = (val: number) => `$` + val
+  const toast = useToast()
+
+  useEffect(() => {
+    console.log(allergens)
+  }, [allergens])
 
   // this function is called when the user selects a file it only works with one file at a time
   const onSelectFile = (e: any) => {
@@ -69,170 +81,267 @@ function UpdateFoodNoteModal(props: Props) {
     return cloudinaryResponseJson.public_id
   }
 
+  const removeSelectedImage = () => {
+    setSelectedFile(null)
+  }
+
   // if there is a new image selected, preview it
   const handleImageDisplay = () => {
     // if user has selected an image, display the image
     if (selectedFile) {
-      const objectUrl = URL.createObjectURL(selectedFile)
+      const objectUrl: any = URL.createObjectURL(selectedFile)
       return objectUrl
     }
     // else, display the image from the database
     // return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
   }
 
-  const handleUpdate = async () => {
-    if (selectedFile) {
-      // upload the image to cloudinary
-      const imageid = await uploadImage(selectedFile)
-      // update the dish in the database
-      const data = {
-        id: props.dish.id,
-        name,
-        description,
-        advertisedDescription,
-        price,
-        imageId: imageid,
-        components: props.dish.components,
-        menu: props.dish.menu,
-        menuSection: props.dish.menuSection
-      }
-      props.handleDishUpdate(data).then(() => {
-        console.log('Dish updated')
+  const handleSubmit = async () => {
+    // check if there if all required fields are filled
+    if (!name || !advertisedDescription || !price) {
+      // alert('Please fill in all required fields')
+      toast({
+        title: 'Please fill in all required fields',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: 'top'
       })
-      props.onClose()
-    } else {
-      console.log('no image selected')
+
+      return
     }
+    // if there is a new image selected, upload it to cloudinary
+    let imageId = null
+    if (selectedFile) {
+      imageId = await uploadImage(selectedFile)
+    }
+
+    // if there is no image selected, use a placeholder image
+    if (!selectedFile) {
+      imageId = 'placeholder'
+    }
+
+    // if there are no allergies, set allergies to null
+    if (allergens && allergens.length === 0) {
+      setAllergens(null)
+    }
+
+    // create the dish in the database with the image id
+    const data = {
+      name,
+      description,
+      advertisedDescription,
+      price,
+      imageId: imageId,
+      allergens: allergens,
+      lastEditedById: props.uid
+    }
+    props.handleCreateDish(data).then(() => {
+      console.log('Dish Created')
+      // reset the form
+      clearForm()
+      // close the modal
+      props.onClose()
+      // display a success toast
+      toast({
+        title: 'Dish Created',
+        description: 'Your dish has been created',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+        position: 'top'
+      })
+    })
+    props.onClose()
+  }
+
+  const clearForm = () => {
+    setName('')
+    setDescription('')
+    setAdvertisedDescription('')
+    setPrice(0)
+    setSelectedFile(null)
+  }
+
+  const handleClose = () => {
+    clearForm()
+    props.onClose()
   }
 
   return (
-    <Modal
-      blockScrollOnMount={true}
-      isOpen={props.isOpen}
-      onClose={props.onClose}
-      size={{ base: 'full', md: 'xl' }}
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Create New Food Note</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack spacing="25px">
-            <FormControl padding="10px" borderRadius={'md'}>
-              <Box
-                marginX={'auto'}
-                display="relative"
-                mb={6}
-                w={'100%'}
-                h="auto"
-                borderRadius="lg"
-                overflow="hidden"
-                boxShadow={'xl'}
-              >
-                <Image
-                  src={handleImageDisplay()}
-                  layout="responsive"
-                  width="400px"
-                  height="283.5px"
-                  // fit="cover"
-                  // rounded={'md'}
-                  // align={'center'}
-                  alt={'product image'}
-                  quality="100"
-                  priority={true}
-                  placeholder="blur"
-                  blurDataURL={handleImageDisplay()}
+    <>
+      {console.log(props.uid)}
+      <Modal
+        blockScrollOnMount={true}
+        isOpen={props.isOpen}
+        onClose={props.onClose}
+        size={{ base: 'full', md: 'xl' }}
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Add New Dish</ModalHeader>
+          <ModalCloseButton onClick={handleClose} />
+          <ModalBody>
+            <VStack spacing="25px">
+              <FormControl padding="10px" borderRadius={'md'} isRequired>
+                <FormLabel>Image</FormLabel>
+                <Box
+                  marginX={'auto'}
+                  display="relative"
+                  mb={6}
+                  w={'100%'}
+                  h="auto"
+                  borderRadius="lg"
+                  overflow="hidden"
+                >
+                  {selectedFile ? (
+                    <>
+                      <Image
+                        src={handleImageDisplay()}
+                        layout="responsive"
+                        width="400px"
+                        height="283.5px"
+                        // fit="cover"
+                        // rounded={'md'}
+                        // align={'center'}
+                        alt={'product image'}
+                        quality="100"
+                        priority={true}
+                        placeholder="blur"
+                        blurDataURL={handleImageDisplay()}
+                      />
+                      <IconButton
+                        colorScheme={'blue'}
+                        aria-label="upload new image"
+                        icon={<BiEdit />}
+                        size="lg"
+                        position="absolute"
+                        bottom="20px"
+                        right="0px"
+                        as={'label'}
+                        htmlFor="file"
+                        boxShadow={'xl'}
+                        borderRadius={'full'}
+                      />
+                      <IconButton
+                        aria-label="remove image"
+                        borderRadius={'full'}
+                        colorScheme={'red'}
+                        size="lg"
+                        position="absolute"
+                        bottom="20px"
+                        right="60px"
+                        icon={<CloseIcon />}
+                        onClick={removeSelectedImage}
+                      />
+                      <input
+                        id="file"
+                        style={{ display: 'none' }}
+                        type="file"
+                        onChange={event =>
+                          onSelectFile(
+                            event as React.ChangeEvent<HTMLInputElement>
+                          )
+                        }
+                        multiple={false}
+                      />
+                    </>
+                  ) : (
+                    <input
+                      id="file"
+                      type="file"
+                      onChange={event =>
+                        onSelectFile(
+                          event as React.ChangeEvent<HTMLInputElement>
+                        )
+                      }
+                      multiple={false}
+                    />
+                  )}
+                </Box>
+              </FormControl>
+              <Divider />
+              <FormControl isRequired>
+                <FormLabel as="legend">Name</FormLabel>
+                <Input
+                  placeholder="Name"
+                  variant="outline"
+                  onChange={event => setName(event.target.value)}
+                  value={name}
                 />
-                <IconButton
-                  colorScheme={'blue'}
-                  aria-label="upload new image"
-                  icon={<BiEdit />}
-                  size="lg"
-                  position="absolute"
-                  bottom="20px"
-                  right="0px"
-                  as={'label'}
-                  htmlFor="file"
-                  boxShadow={'xl'}
-                  borderRadius={'full'}
-                />
-                <input
-                  id="file"
-                  style={{ display: 'none' }}
-                  type="file"
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel as="legend">Price</FormLabel>
+                <NumberInput
+                  variant="outline"
+                  value={format(price)}
+                  onChange={value => setPrice(Number(value))}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel as="legend">Advertised Description</FormLabel>
+                <FormHelperText>
+                  {`How it reads on the actual menu`}
+                </FormHelperText>
+                <Textarea
+                  placeholder="Advertised Description"
+                  variant="outline"
                   onChange={event =>
-                    onSelectFile(event as React.ChangeEvent<HTMLInputElement>)
+                    setAdvertisedDescription(event.target.value)
                   }
-                  multiple={false}
+                  value={advertisedDescription}
                 />
-              </Box>
-            </FormControl>
-            <Divider />
-            <FormControl isRequired>
-              <FormLabel as="legend">Name</FormLabel>
-              <Input
-                placeholder="Name"
-                variant="outline"
-                onChange={event => setName(event.target.value)}
-                value={name}
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel as="legend">Price</FormLabel>
-              <NumberInput
-                variant="outline"
-                value={format(price)}
-                onChange={value => setPrice(Number(value))}
-              >
-                <NumberInputField />
-                <NumberInputStepper>
-                  <NumberIncrementStepper />
-                  <NumberDecrementStepper />
-                </NumberInputStepper>
-              </NumberInput>
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel as="legend">Advertised Description</FormLabel>
-              <FormHelperText>
-                {`How it reads on the actual menu`}
-              </FormHelperText>
-              <Textarea
-                placeholder="Advertised Description"
-                variant="outline"
-                onChange={event => setAdvertisedDescription(event.target.value)}
-                value={advertisedDescription}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel as="legend">Description</FormLabel>
-              <FormHelperText>
-                {`How you would describe it to a customer`}
-              </FormHelperText>
-              <Textarea
-                placeholder="Advertised Description"
-                variant="outline"
-                onChange={event => setDescription(event.target.value)}
-                value={description}
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel as="legend">Common Allergens</FormLabel>
-              <FormHelperText>
-                {'There are 9 common allergens. Please select all that apply'}
-              </FormHelperText>
-            </FormControl>
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="gray" mr={3} onClick={props.onClose}>
-            Cancel
-          </Button>
-          <Button variant="outline" colorScheme="blue" onClick={handleUpdate}>
-            Publish
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+              </FormControl>
+              <FormControl>
+                <FormLabel as="legend">Description</FormLabel>
+                <FormHelperText>
+                  {`How you would describe it to a customer`}
+                </FormHelperText>
+                <Textarea
+                  placeholder="Advertised Description"
+                  variant="outline"
+                  onChange={event => setDescription(event.target.value)}
+                  value={description}
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel as="legend">Common Allergens</FormLabel>
+                <FormHelperText mb="15px">
+                  {'There are 9 common allergens. Please select all that apply'}
+                </FormHelperText>
+                <CheckboxGroup onChange={value => setAllergens(value)}>
+                  <Flex gap="20px" wrap={'wrap'}>
+                    {props.allergens.map(allergen => (
+                      <Checkbox
+                        key={allergen.id}
+                        value={allergen.id}
+                        isChecked={allergens?.includes(allergen)}
+                      >
+                        {allergen.name}
+                      </Checkbox>
+                    ))}
+                  </Flex>
+                </CheckboxGroup>
+              </FormControl>
+            </VStack>
+          </ModalBody>
+          <ModalFooter>
+            <Button colorScheme="gray" mr={3} onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button variant="outline" colorScheme="blue" onClick={handleSubmit}>
+              Publish
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   )
 }
 

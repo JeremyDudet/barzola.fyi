@@ -85,11 +85,11 @@ export const dishesRouter = createRouter()
     input: z.object({ 
       name: z.string(), 
       description: z.string(), 
+      advertisedDescription: z.string(),
       price: z.number(), 
       imageId: z.string(),
-      menuSectionId: z.string(),
-      menuId: z.string(),
-      advertisedDescription: z.string(),
+      allergens: z.array(z.string()).optional(),
+      lastEditedById: z.string(),
     }),
     async resolve({ ctx, input }) {
       await ctx.prisma.dish.create({
@@ -98,19 +98,18 @@ export const dishesRouter = createRouter()
           description: input.description,
           advertisedDescription: input.advertisedDescription,
           price: input.price,
-          menu: {
-            connect: {
-              id: input.menuId,
-            },
-          },
-          menuSection: {
-            connect: {
-              id: input.menuSectionId,
-            },
-          },
           imageId: input.imageId,
-        },
-      })    
+          // add the allergens to the dish
+          allergens: {
+            connect: input.allergens?.map((id) => ({ id })),
+          },
+          // add the lastEditedBy to the dish
+          lastEditedBy: {
+            connect: {
+              id: input.lastEditedById,
+            }
+          }
+      }})    
     }
   })
 

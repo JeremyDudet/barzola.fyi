@@ -25,12 +25,12 @@ import type { Dish, NewDish } from '../../types'
 export default function Index() {
   const { user } = useAuthContext()
   const utils = trpc.useContext()
+  const getAllergens = trpc.useQuery(['allergens.getAllergens'])
   const createDish = trpc.useMutation('dishes.createDish')
   const getDishes = trpc.useQuery(['dishes.getDishes'])
   const updateDish = trpc.useMutation('dishes.updateDish')
   // const deleteDish = trpc.useMutation('dishes.deleteDish')
   const [search, setSearch] = useState<string>('')
-  const [dishes, setDishes] = useState<Dish[] | undefined>()
   const { isOpen, onOpen, onClose } = useDisclosure()
 
   // const handleDishDelete = useCallback(
@@ -69,7 +69,7 @@ export default function Index() {
 
   if (!user.firstName) return <LoginForm /> // if user is not logged in, return Auth component
 
-  if (!getDishes.data) {
+  if (!getDishes.data || !getAllergens.data) {
     return (
       <Center paddingTop={16}>
         <Spinner size="xl" />
@@ -83,6 +83,8 @@ export default function Index() {
         isOpen={isOpen}
         onClose={onClose}
         handleCreateDish={handleCreateDish}
+        allergens={getAllergens.data}
+        uid={user.id}
       />
       <Stack>
         <Flex justify="space-between">
