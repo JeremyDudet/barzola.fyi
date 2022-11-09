@@ -16,10 +16,29 @@ import { z } from 'zod'
 
 
 export const menusRouter = createRouter()
-// query to get all menus
+// query to get all menus and their dishes
     .query("getMenus", {
         async resolve({ ctx }) {
-            return await ctx.prisma.menu.findMany();
+            return await ctx.prisma.menu.findMany({
+                include: {
+                    dishes: true,
+                    menuSections: true,
+                }
+            });
+        }
+    })
+// get all menus of type food
+    .query("getFoodMenus", {
+        async resolve({ ctx }) {
+            return await ctx.prisma.menu.findMany({
+                where: {
+                    menuType: "food"
+                },
+                include: {
+                    dishes: true,
+                    menuSections: true,
+                }
+            });
         }
     })
 // create a new menu
@@ -27,16 +46,12 @@ export const menusRouter = createRouter()
         // validate input with Zod
         input: z.object({
             name: z.string(),
-            description: z.string(),
-            imageId: z.string(),
         }),
         async resolve({ ctx, input }) {
             // create a new menu in the database
             const menu = await ctx.prisma.menu.create({
                 data: {
                     name: input.name,
-                    description: input.description,
-                    imageId: input.imageId,
                 },
             })
             return menu
@@ -56,26 +71,26 @@ export const menusRouter = createRouter()
             )
         }
     })
-// update a menu
-    .mutation("updateMenu", {
-        // validate input with Zod
-        input: z.object({
-            id: z.string(),
-            name: z.string(),
-            description: z.string(),
-            imageId: z.string(),
-        }),
-        async resolve({ ctx, input }) {
-            await ctx.prisma.menu.update({
-                where: {
-                    id: input.id,
-                },
-                data: {
-                    name: input.name,
-                    description: input.description,
-                    imageId: input.imageId,
-                },
-            })
-        }
-    })
+// // update a menu
+//     .mutation("updateMenu", {
+//         // validate input with Zod
+//         input: z.object({
+//             id: z.string(),
+//             name: z.string(),
+//             description: z.string(),
+//             imageId: z.string(),
+//         }),
+//         async resolve({ ctx, input }) {
+//             await ctx.prisma.menu.update({
+//                 where: {
+//                     id: input.id,
+//                 },
+//                 data: {
+//                     name: input.name,
+//                     description: input.description,
+//                     imageId: input.imageId,
+//                 },
+//             })
+//         }
+//     })
     

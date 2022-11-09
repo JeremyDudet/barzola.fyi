@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { trpc } from '../utils/trpc'
 import {
   Box,
   Modal,
@@ -21,17 +22,33 @@ import {
   Textarea,
   IconButton,
   Button,
-  Divider
+  Divider,
+  CheckboxGroup,
+  Checkbox,
+  Flex
 } from '@chakra-ui/react'
 import { BiEdit } from 'react-icons/bi'
+import {
+  GiPeanut,
+  GiSesame,
+  GiSewedShell,
+  GiMilkCarton,
+  GiRawEgg,
+  GiFriedFish,
+  GiJellyBeans,
+  GiWheat,
+  GiAlmond,
+  GiGarlic
+} from 'react-icons/gi'
 import Image from 'next/image'
-import type { Dish } from '../types'
+import type { Dish, Allergen } from '../types'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   handleDishUpdate: (data: Dish) => Promise<void>
   dish: Dish
+  uid: string
 }
 
 function UpdateFoodNoteModal(props: Props) {
@@ -41,8 +58,20 @@ function UpdateFoodNoteModal(props: Props) {
   const [advertisedDescription, setAdvertisedDescription] = useState(
     props.dish.advertisedDescription
   )
+  // loop through all allergens and set the state to an array of their ids
+  const [allergens, setAllergens] = useState(
+    props.dish?.allergens?.map((allergen: any) => allergen.id)
+  )
+
   const [price, setPrice] = useState(props.dish.price)
   const format = (val: number) => `$` + val
+  // grab allergens from database
+  const getAllergens = trpc.useQuery(['allergens.getAllergens'])
+
+  // console.log('allergens', allergens) on change
+  useEffect(() => {
+    console.log('allergens', allergens)
+  }, [allergens])
 
   // this function is called when the user selects a file it only works with one file at a time
   const onSelectFile = (e: any) => {
@@ -84,6 +113,7 @@ function UpdateFoodNoteModal(props: Props) {
 
   const handleUpdate = async () => {
     if (selectedFile) {
+      // if there is a new image selected, upload it to cloudinary
       // upload the image to cloudinary
       const imageid = await uploadImage(selectedFile)
       // update the dish in the database
@@ -94,9 +124,10 @@ function UpdateFoodNoteModal(props: Props) {
         advertisedDescription,
         price,
         imageId: imageid,
-        components: props.dish.components,
         menu: props.dish.menu,
-        menuSection: props.dish.menuSection
+        menuSection: props.dish.menuSection,
+        lastEditedById: props.uid,
+        allergens: allergens
       }
       props.handleDishUpdate(data).then(() => {
         console.log('Dish updated')
@@ -104,7 +135,37 @@ function UpdateFoodNoteModal(props: Props) {
       props.onClose()
     } else {
       console.log('no image selected')
+      // update the dish in the database
+      const data = {
+        id: props.dish.id,
+        name,
+        description,
+        advertisedDescription,
+        price,
+        imageId: props.dish.imageId,
+        menu: props.dish.menu,
+        menuSection: props.dish.menuSection,
+        lastEditedById: props.uid,
+        allergens: allergens
+      }
+      props.handleDishUpdate(data).then(() => {
+        console.log('Dish updated')
+      })
+      props.onClose()
     }
+  }
+
+  const assignIcons: any = {
+    allium: <GiGarlic />,
+    dairy: <GiMilkCarton />,
+    egg: <GiRawEgg />,
+    fish: <GiFriedFish />,
+    gluten: <GiWheat />,
+    peanut: <GiPeanut />,
+    sesame: <GiSesame />,
+    shellfish: <GiSewedShell />,
+    soy: <GiJellyBeans />,
+    treenut: <GiAlmond />
   }
 
   return (
@@ -219,9 +280,28 @@ function UpdateFoodNoteModal(props: Props) {
             </FormControl>
             <FormControl isRequired>
               <FormLabel as="legend">Common Allergens</FormLabel>
-              <FormHelperText>
-                {'There are 9 common allergens. Please select all that apply'}
-              </FormHelperText>
+              <FormHelperText>{'Please select all that apply'}</FormHelperText>
+              <CheckboxGroup
+                value={allergens}
+                onChange={value => setAllergens(value)}
+              >
+                <Flex wrap={'wrap'} gap="4" pt="4">
+                  {/* loop through allergens in database */}
+                  {getAllergens.data?.map((allergen: any) => (
+                    <Checkbox
+                      key={allergen.id}
+                      value={allergen.id}
+                      colorScheme="blue"
+                    >
+                      <Flex gap={1} alignItems="center">
+                        {allergen.name.charAt(0).toUpperCase() +
+                          allergen.name.slice(1)}
+                        {assignIcons[allergen.name]}
+                      </Flex>
+                    </Checkbox>
+                  ))}
+                </Flex>
+              </CheckboxGroup>
             </FormControl>
           </VStack>
         </ModalBody>

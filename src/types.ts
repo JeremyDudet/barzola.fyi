@@ -103,7 +103,6 @@ export interface Allergen {
   id: string
   name: string
   description: string | null
-  dishes?: Dish[]
   createdAt: Date
   lastEdited: Date
 }
@@ -124,12 +123,11 @@ export interface Dish {
   description: string
   advertisedDescription: string
   price: number
-  components: Component[] | null
   menu: Menu | null
   menuSection: MenuSection | null
-  allergens?: Allergen[]
+  allergens?: string[] | undefined
   lastEdited?: Date
-  lastEditedBy?: User
+  lastEditedById: string
   imageId: string
 }
 
@@ -144,13 +142,12 @@ export interface NewDish {
 }
 
 export interface MenuSection {
-  forEach(arg0: (menu: MenuSection, index?: number) => void): unknown
   id: string
   name: string
-  description: string
-  dishes?: Dish[]
-  menu: Menu
   menuId: string
+  arrangementInMenu: number
+  lastEdited: Date
+  createdAt: Date
 }
 
 export interface Menu {

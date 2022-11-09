@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { trpc } from '../utils/trpc'
 import {
   Modal,
   ModalOverlay,
@@ -21,7 +22,7 @@ import {
   List,
   ListItem
 } from '@chakra-ui/react'
-import type { Dish, Component, Menu, MenuSection } from '../types'
+import type { Dish, Component, Menu, MenuSection, User } from '../types'
 
 interface Props {
   dish: Dish
@@ -44,9 +45,16 @@ const hello = 'name'
 //   }
 
 export default function FoodNoteModal(props: Props) {
-  const components = props.dish.components
-  const allergens = components?.map(component => component.allergens)
-  const allergenList = allergens?.flat()
+  // grab user by id
+  const getUserById = trpc.useQuery([
+    'users.getUser',
+    {
+      id: props.dish.lastEditedById
+    }
+  ])
+  // const components = props.dish.components
+  // const allergens = components?.map(component => component.allergens)
+  // const allergenList = allergens?.flat()
 
   const menuList = () => {
     const menus = props.dish.menu
@@ -76,25 +84,42 @@ export default function FoodNoteModal(props: Props) {
     }
   }
 
-  const menuSection = () => {
+  const handleUserName = (user: User | undefined | null) => {
+    if (user?.alias) {
+      return user.alias
+    } else {
+      return `${user?.firstName} ${user?.lastName}`
+    }
+  }
+
+  const handleDisplayLastEditedDate = (date: Date | undefined) => {
+    return new Intl.DateTimeFormat('en-US').format(date)
+  }
+
+  const menuSection = (dish: any) => {
     let menuSections = ''
-    props.dish.menuSection?.forEach(
+    dish.menuSection?.forEach(
       (section: MenuSection) => (menuSections += section.name)
     )
     return menuSections
   }
 
-  const Component = ({ component }: { component: Component }) => {
-    return (
-      <List>
-        <ListItem fontWeight="bold">{component.name}</ListItem>
-        <ListItem>{component.description}</ListItem>{' '}
-      </List>
-    )
+  // handle useColorModeValue higher order function
+  const HandleUseColorModeValue = (light: string, dark: string) => {
+    return useColorModeValue(light, dark)
   }
 
-  const Allergen = ({ allergenName }: { allergenName: string }) => {
-    return <ListItem>{allergenName}</ListItem>
+  const handleAllergens = (dish: Dish) => {
+    const allergens: string[] = []
+    dish.allergens?.forEach(allergen => {
+      allergens.push(allergen.name)
+    })
+    return allergens.join(', ')
+  }
+
+  // if user data is loading, show loading
+  if (getUserById.status === 'loading') {
+    return <div>Loading...</div>
   }
 
   return (
@@ -113,7 +138,7 @@ export default function FoodNoteModal(props: Props) {
           textTransform="uppercase"
           fontFamily={'heading'}
         >
-          {`${menuList()} - ${menuSection()}`}
+          {`${menuList()} - ${menuSection(props.dish)}`}
         </ModalHeader>
         <ModalCloseButton />
         <ModalBody>
@@ -144,7 +169,7 @@ export default function FoodNoteModal(props: Props) {
                 {props.dish.name.toUpperCase()}
               </Heading>
               <Text
-                color={useColorModeValue('gray.900', 'gray.400')}
+                color={HandleUseColorModeValue('gray.900', 'gray.400')}
                 fontWeight={300}
                 fontSize={'2xl'}
               >{`$${props.dish.price}`}</Text>
@@ -154,74 +179,72 @@ export default function FoodNoteModal(props: Props) {
               direction="column"
               divider={
                 <StackDivider
-                  borderColor={useColorModeValue('gray.200', 'gray.600')}
+                  borderColor={HandleUseColorModeValue('gray.200', 'gray.600')}
                 />
               }
             >
               <VStack spacing={{ base: 4, sm: 6 }}>
                 <Text
-                  color={useColorModeValue('gray.500', 'gray.400')}
+                  color={HandleUseColorModeValue('gray.500', 'gray.400')}
                   fontSize={'xl'}
-                  fontWeight={'300'}
+                  fontWeight={'400'}
                 >
-                  {props.dish.description}
+                  {props.dish.advertisedDescription.toLocaleLowerCase()}
                 </Text>
               </VStack>
               <Box>
                 <Text
                   fontSize={{ base: '16px', lg: '18px' }}
-                  color={useColorModeValue('yellow.500', 'yellow.300')}
+                  color={HandleUseColorModeValue('yellow.500', 'yellow.300')}
                   fontWeight={'500'}
                   textTransform={'uppercase'}
                   mb={'4'}
                 >
-                  Components
+                  Description
                 </Text>
-                <SimpleGrid columns={{ base: 1 }} spacing={5}>
-                  {components?.map((component: Component) => {
-                    return (
-                      <Component key={component.id} component={component} />
-                    )
-                  })}
-                </SimpleGrid>
+                <Text
+                  color={HandleUseColorModeValue('gray.600', 'gray.400')}
+                  fontSize={'xl'}
+                  fontWeight={'400'}
+                >
+                  {props.dish.description}
+                </Text>
               </Box>
               <Box>
                 <Text
                   fontSize={{ base: '16px', lg: '18px' }}
-                  color={useColorModeValue('yellow.500', 'yellow.300')}
+                  color={HandleUseColorModeValue('yellow.500', 'yellow.300')}
                   fontWeight={'500'}
                   textTransform={'uppercase'}
                   mb={'4'}
                 >
                   Common Allergens
                 </Text>
-                <SimpleGrid columns={{ base: 1, md: 2 }} spacing={5}>
-                  <List>
-                    {allergenList?.map(allergen => {
-                      if (allergen)
-                        return (
-                          <Allergen
-                            key={allergen.id}
-                            allergenName={allergen.name}
-                          />
-                        )
-                    })}
-                  </List>
-                </SimpleGrid>
+                <Text
+                  color={HandleUseColorModeValue('gray.600', 'gray.400')}
+                  fontSize={'xl'}
+                  fontWeight={'400'}
+                >
+                  {handleAllergens(props.dish)}
+                </Text>
               </Box>
               <Stack direction={'column'} align={'start'}>
                 <Flex align={'center'} gap={2}>
-                  <Avatar
+                  {/* <Avatar
                     src={'https://avatars0.githubusercontent.com/u/1164541?v=4'}
-                  />
+                  /> */}
                   <Stack direction={'column'} spacing={0} fontSize={'sm'}>
                     <Stack direction={'row'} spacing={2} fontSize={'sm'}>
                       <Text color={'gray.500'}>Last edited:</Text>
-                      <Text>Feb 08, 2021</Text>
+                      <Text>
+                        {handleDisplayLastEditedDate(props.dish.lastEdited)}
+                      </Text>
                     </Stack>
                     <Stack direction={'row'} spacing={2} fontSize={'sm'}>
                       <Text color={'gray.500'}>By:</Text>
-                      <Text fontWeight={600}>Achim Rolle</Text>
+                      <Text fontWeight={600}>
+                        {handleUserName(getUserById.data)}
+                      </Text>
                     </Stack>
                   </Stack>
                 </Flex>

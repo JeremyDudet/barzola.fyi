@@ -18,7 +18,29 @@ import { z } from 'zod'
 export const dishesRouter = createRouter()
   .query("getDishes", {
     async resolve({ ctx }) {
-      return await ctx.prisma.dish.findMany();
+      return await ctx.prisma.dish.findMany({
+        include: {
+          menu: true,
+          menuSection: true,
+          lastEditedBy: true,
+          allergens: true,
+        }
+      });
+    }
+  })
+  .query("getActiveDishes", {
+    async resolve({ ctx }) {
+      return await ctx.prisma.dish.findMany({
+        where: {
+          active: true
+          },
+          include: {
+            menu: true,
+            menuSection: true,
+            allergens: true,
+          }
+        }
+      )
     }
   })
   .mutation("deleteDish", {
@@ -43,6 +65,7 @@ export const dishesRouter = createRouter()
       advertisedDescription: z.string(), 
       price: z.number(), 
       imageId: z.string(),
+      allergens: z.array(z.string()).optional(),
     }),
     async resolve({ ctx, input }) {
       // update a user in the database based on the id
@@ -56,6 +79,9 @@ export const dishesRouter = createRouter()
           advertisedDescription: input.advertisedDescription,
           price: input.price,
           imageId: input.imageId,
+          allergens: {
+            connect: input.allergens?.map((allergen) => ({ id: allergen })),
+          },
         },
       })
       return dish

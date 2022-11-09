@@ -28,6 +28,18 @@ import {
   useToast
 } from '@chakra-ui/react'
 import { CloseIcon } from '@chakra-ui/icons'
+import {
+  GiPeanut,
+  GiSesame,
+  GiSewedShell,
+  GiMilkCarton,
+  GiRawEgg,
+  GiFriedFish,
+  GiJellyBeans,
+  GiWheat,
+  GiAlmond,
+  GiGarlic
+} from 'react-icons/gi'
 import { BiEdit } from 'react-icons/bi'
 import Image from 'next/image'
 import type { NewDish, Allergen } from '../types'
@@ -36,8 +48,9 @@ interface Props {
   isOpen: boolean
   onClose: () => void
   handleCreateDish: (data: NewDish) => Promise<void>
-  allergens: Allergen[]
+  // allergens: Allergen[]
   uid: string
+  allergens: any
 }
 
 function UpdateFoodNoteModal(props: Props) {
@@ -166,6 +179,19 @@ function UpdateFoodNoteModal(props: Props) {
   const handleClose = () => {
     clearForm()
     props.onClose()
+  }
+
+  const assignIcons: any = {
+    allium: <GiGarlic />,
+    dairy: <GiMilkCarton />,
+    egg: <GiRawEgg />,
+    fish: <GiFriedFish />,
+    gluten: <GiWheat />,
+    peanut: <GiPeanut />,
+    sesame: <GiSesame />,
+    shellfish: <GiSewedShell />,
+    soy: <GiJellyBeans />,
+    treenut: <GiAlmond />
   }
 
   return (
@@ -312,22 +338,25 @@ function UpdateFoodNoteModal(props: Props) {
               </FormControl>
               <FormControl isRequired>
                 <FormLabel as="legend">Common Allergens</FormLabel>
-                <FormHelperText mb="15px">
-                  {'There are 9 common allergens. Please select all that apply'}
+                <FormHelperText>
+                  {'Please select all that apply'}
                 </FormHelperText>
-                <CheckboxGroup onChange={value => setAllergens(value)}>
-                  <Flex gap="20px" wrap={'wrap'}>
-                    {props.allergens.map(allergen => (
-                      <Checkbox
-                        key={allergen.id}
-                        value={allergen.id}
-                        isChecked={allergens?.includes(allergen)}
-                      >
-                        {allergen.name}
-                      </Checkbox>
-                    ))}
-                  </Flex>
-                </CheckboxGroup>
+                <Flex wrap={'wrap'} gap="4" pt="4">
+                  {/* loop through allergens in database */}
+                  {props.allergens?.map((allergen: any) => (
+                    <Checkbox
+                      key={allergen.id}
+                      value={allergen.id}
+                      colorScheme="blue"
+                    >
+                      <Flex gap={1} alignItems="center">
+                        {allergen.name.charAt(0).toUpperCase() +
+                          allergen.name.slice(1)}
+                        {assignIcons[allergen.name]}
+                      </Flex>
+                    </Checkbox>
+                  ))}
+                </Flex>
               </FormControl>
             </VStack>
           </ModalBody>

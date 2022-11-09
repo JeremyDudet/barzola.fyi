@@ -21,6 +21,19 @@ export const usersRouter = createRouter()
       return await ctx.prisma.user.findMany();
     }
   })
+  // get user by id
+  .query("getUser", {
+    input: z.object({
+      id: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      return await ctx.prisma.user.findUnique({
+        where: {
+          id: input.id,
+        },
+      });
+    }
+  })
   .mutation("deleteUser", {
     input: z.object({
       id: z.string(),

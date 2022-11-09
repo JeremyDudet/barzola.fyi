@@ -7,17 +7,26 @@ import {
   Text,
   Flex,
   useDisclosure,
-  IconButton
+  IconButton,
+  useColorModeValue
 } from '@chakra-ui/react'
 import { Dish, Menu } from '../types'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
 interface Props {
   dish: Dish
+  userAuth: string
   handleDishUpdate: (data: Dish) => Promise<void>
+  uid: string
+  allergens: any
 }
 
-export default function Index({ dish, handleDishUpdate }: Props) {
+export default function Index({
+  dish,
+  userAuth,
+  handleDishUpdate,
+  uid
+}: Props) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const {
     isOpen: isOpenUpdate,
@@ -54,16 +63,38 @@ export default function Index({ dish, handleDishUpdate }: Props) {
     }
   }
 
+  const handleDisplayMenuName = (dish: any) => {
+    // if there is only one menu, return the name of that menu
+    if (dish.menu?.length === 1) {
+      return dish.menu[0].name.toUpperCase()
+    }
+    // if there are multiple menus, return the name of all the menus
+    if (dish.menu?.length > 1) {
+      return dish.menu
+        ?.map((menu: Menu) => menu.name)
+        .join(', ')
+        .toUpperCase()
+    }
+  }
+
   return (
     <>
       <FoodNoteModal dish={dish} isOpen={isOpen} onClose={onClose} />
       <UpdateFoodNoteModal
+        uid={uid}
         dish={dish}
         isOpen={isOpenUpdate}
         onClose={onCloseUpdate}
         handleDishUpdate={handleDishUpdate}
       />
       <Flex flexDirection="column">
+        <Text
+          pl="60px"
+          fontSize="xs"
+          textColor={useColorModeValue('gray.400', 'gray.500')}
+        >
+          {handleDisplayMenuName(dish)}
+        </Text>
         <Flex alignItems="start" gap="10px">
           <Box
             minW="3rem"
@@ -106,7 +137,15 @@ export default function Index({ dish, handleDishUpdate }: Props) {
             </Text>
           </Flex>
           <Flex>
-            <IconButton aria-label="edit" onClick={onOpenUpdate}>
+            <IconButton
+              aria-label="edit"
+              onClick={onOpenUpdate}
+              style={{
+                display: `${
+                  userAuth === 'admin' || userAuth === 'kitchen' ? '' : 'none'
+                }`
+              }}
+            >
               <BsThreeDotsVertical />
             </IconButton>
           </Flex>
