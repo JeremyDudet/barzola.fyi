@@ -41,12 +41,12 @@ import {
   GiGarlic
 } from 'react-icons/gi'
 import Image from 'next/image'
-import type { Dish, Allergen } from '../types'
+import type { Dish, Allergen, UpdateDish } from '../types'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
-  handleDishUpdate: (data: Dish) => Promise<void>
+  handleDishUpdate: (data: UpdateDish) => Promise<void>
   dish: Dish
   uid: string
 }

@@ -10,13 +10,13 @@ import {
   IconButton,
   useColorModeValue
 } from '@chakra-ui/react'
-import { Dish, Menu } from '../types'
+import { Dish, Menu, UpdateDish } from '../types'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
 interface Props {
   dish: Dish
   userAuth: string
-  handleDishUpdate: (data: Dish) => Promise<void>
+  handleDishUpdate: (data: UpdateDish) => Promise<void>
   uid: string
   allergens: any
 }
