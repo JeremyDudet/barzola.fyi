@@ -131,6 +131,20 @@ export interface Dish {
   imageId: string
 }
 
+export interface UpdateDish {
+  id: string
+  name: string
+  description: string
+  advertisedDescription: string
+  price: number
+  menu: Menu | null
+  menuSection: MenuSection | null
+  allergens?: string[]
+  lastEdited?: Date
+  lastEditedById: string
+  imageId: string
+}
+
 export interface NewDish {
   name: string
   description: string

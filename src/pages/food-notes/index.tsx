@@ -28,7 +28,7 @@ import DishCard from '../../components/DishCard'
 import LoginForm from '../../components/LoginForm'
 import NewDishModal from '../../components/NewDishModal'
 import { useAuthContext } from '../../context/AuthContext'
-import type { Dish, Menu, NewDish } from '../../types'
+import type { Dish, Menu, NewDish, UpdateDish } from '../../types'
 
 const FilterAccordion = (props: any) => {
   const menuIds: string[] = []
@@ -108,7 +108,7 @@ export default function Index() {
   // )
 
   // update the dishes state and also grab the image id for cloudinary
-  const handleDishUpdate = async (data: Dish) => {
+  const handleDishUpdate = async (data: UpdateDish) => {
     await updateDish.mutateAsync(data, {
       onSuccess: () => {
         utils.invalidateQueries(['dishes.getDishes'])

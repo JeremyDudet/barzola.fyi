@@ -66,6 +66,7 @@ export const dishesRouter = createRouter()
       price: z.number(), 
       imageId: z.string(),
       allergens: z.array(z.string()).optional(),
+      menus: z.array(z.string()).optional(),
     }),
     async resolve({ ctx, input }) {
       // update a user in the database based on the id
@@ -82,6 +83,9 @@ export const dishesRouter = createRouter()
           allergens: {
             connect: input.allergens?.map((allergen) => ({ id: allergen })),
           },
+          menu: {
+            connect: input.menus?.map((menu) => ({ id: menu })),
+          }
         },
       })
       return dish
