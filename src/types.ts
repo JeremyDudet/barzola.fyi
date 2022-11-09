@@ -125,7 +125,7 @@ export interface Dish {
   price: number
   menu: Menu | null
   menuSection: MenuSection | null
-  allergens?: string[] | undefined
+  allergens?: Allergen[]
   lastEdited?: Date
   lastEditedById: string
   imageId: string
