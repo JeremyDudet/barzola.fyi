@@ -137,7 +137,7 @@ export interface UpdateDish {
   description: string
   advertisedDescription: string
   price: number
-  menu: Menu | null
+  menu: string[] | null
   menuSection: MenuSection | null
   allergens?: string[]
   lastEdited?: Date
@@ -151,6 +151,8 @@ export interface NewDish {
   advertisedDescription: string
   price: number
   allergens: string[] | undefined
+  menu: string[] | undefined
+  menuSection: string | undefined
   imageId: string
   lastEditedById: string
 }

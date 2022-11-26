@@ -51,6 +51,7 @@ interface Props {
   // allergens: Allergen[]
   uid: string
   allergens: any
+  menus: any
 }
 
 function UpdateFoodNoteModal(props: Props) {
@@ -60,12 +61,38 @@ function UpdateFoodNoteModal(props: Props) {
   const [advertisedDescription, setAdvertisedDescription] = useState('')
   const [price, setPrice] = useState(0)
   const [allergens, setAllergens] = useState<any>([])
+  const [menus, setMenus] = useState<any>([])
+  const [menuSections, setMenuSections] = useState<any>([])
+  const [isWriting, setIsWriting] = useState(false)
   const format = (val: number) => `$` + val
   const toast = useToast()
 
+  // check to see if the user has edited the form
   useEffect(() => {
-    console.log(allergens)
-  }, [allergens])
+    if (
+      selectedFile ||
+      name !== '' ||
+      description !== '' ||
+      advertisedDescription !== '' ||
+      price !== 0 ||
+      allergens.length > 0 ||
+      menus.length > 0 ||
+      menuSections.length > 0
+    ) {
+      setIsWriting(true)
+    } else {
+      setIsWriting(false)
+    }
+  }, [
+    selectedFile,
+    name,
+    description,
+    advertisedDescription,
+    price,
+    allergens,
+    menus,
+    menuSections
+  ])
 
   // this function is called when the user selects a file it only works with one file at a time
   const onSelectFile = (e: any) => {
@@ -129,14 +156,14 @@ function UpdateFoodNoteModal(props: Props) {
       imageId = await uploadImage(selectedFile)
     }
 
-    // if there is no image selected, use a placeholder image
-    if (!selectedFile) {
-      imageId = 'placeholder'
-    }
-
     // if there are no allergies, set allergies to null
     if (allergens && allergens.length === 0) {
       setAllergens(null)
+    }
+
+    // if there are no menus, set menus to null
+    if (menus && menus.length === 0) {
+      setMenus(null)
     }
 
     // create the dish in the database with the image id
@@ -147,6 +174,8 @@ function UpdateFoodNoteModal(props: Props) {
       price,
       imageId: imageId,
       allergens: allergens,
+      menu: menus,
+      menuSection: menuSections,
       lastEditedById: props.uid
     }
     props.handleCreateDish(data).then(() => {
@@ -169,16 +198,30 @@ function UpdateFoodNoteModal(props: Props) {
   }
 
   const clearForm = () => {
+    // clear image
+    setSelectedFile(null)
     setName('')
     setDescription('')
     setAdvertisedDescription('')
     setPrice(0)
     setSelectedFile(null)
+    setAllergens([])
+    setMenus([])
   }
 
   const handleClose = () => {
-    clearForm()
-    props.onClose()
+    // if the user has edited the form, ask them if they want to close the modal
+    if (isWriting) {
+      const confirmClose = confirm(
+        'Are you sure you want to close? Your changes will not be saved.'
+      )
+      if (confirmClose) {
+        props.onClose()
+        clearForm()
+        return
+      }
+      props.onClose()
+    }
   }
 
   const assignIcons: any = {
@@ -227,14 +270,12 @@ function UpdateFoodNoteModal(props: Props) {
                         layout="responsive"
                         width="400px"
                         height="283.5px"
-                        // fit="cover"
-                        // rounded={'md'}
-                        // align={'center'}
                         alt={'product image'}
                         quality="100"
                         priority={true}
                         placeholder="blur"
                         blurDataURL={handleImageDisplay()}
+                        objectFit="contain"
                       />
                       <IconButton
                         colorScheme={'blue'}
@@ -287,6 +328,32 @@ function UpdateFoodNoteModal(props: Props) {
                 </Box>
               </FormControl>
               <Divider />
+              <FormControl isRequired>
+                <FormLabel as="legend">Menu</FormLabel>
+                <FormHelperText>
+                  {'Please select all that apply'}
+                </FormHelperText>
+                <CheckboxGroup
+                  value={menus}
+                  onChange={value => setMenus(value)}
+                >
+                  <Flex wrap={'wrap'} gap="4" pt="4">
+                    {/* loop through allergens in database */}
+                    {props.menus?.map((menu: any) => (
+                      <Checkbox
+                        key={menu.id}
+                        value={menu.id}
+                        colorScheme="blue"
+                      >
+                        <Flex gap={1} alignItems="center">
+                          {menu.name.charAt(0).toUpperCase() +
+                            menu.name.slice(1)}
+                        </Flex>
+                      </Checkbox>
+                    ))}
+                  </Flex>
+                </CheckboxGroup>
+              </FormControl>
               <FormControl isRequired>
                 <FormLabel as="legend">Name</FormLabel>
                 <Input
@@ -341,22 +408,27 @@ function UpdateFoodNoteModal(props: Props) {
                 <FormHelperText>
                   {'Please select all that apply'}
                 </FormHelperText>
-                <Flex wrap={'wrap'} gap="4" pt="4">
-                  {/* loop through allergens in database */}
-                  {props.allergens?.map((allergen: any) => (
-                    <Checkbox
-                      key={allergen.id}
-                      value={allergen.id}
-                      colorScheme="blue"
-                    >
-                      <Flex gap={1} alignItems="center">
-                        {allergen.name.charAt(0).toUpperCase() +
-                          allergen.name.slice(1)}
-                        {assignIcons[allergen.name]}
-                      </Flex>
-                    </Checkbox>
-                  ))}
-                </Flex>
+                <CheckboxGroup
+                  value={allergens}
+                  onChange={value => setAllergens(value)}
+                >
+                  <Flex wrap={'wrap'} gap="4" pt="4">
+                    {/* loop through allergens in database */}
+                    {props.allergens?.map((allergen: any) => (
+                      <Checkbox
+                        key={allergen.id}
+                        value={allergen.id}
+                        colorScheme="blue"
+                      >
+                        <Flex gap={1} alignItems="center">
+                          {allergen.name?.charAt(0).toUpperCase() +
+                            allergen.name?.slice(1)}
+                          {assignIcons[allergen.name]}
+                        </Flex>
+                      </Checkbox>
+                    ))}
+                  </Flex>
+                </CheckboxGroup>
               </FormControl>
             </VStack>
           </ModalBody>

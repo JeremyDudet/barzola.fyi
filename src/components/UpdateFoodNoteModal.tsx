@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react'
-import { trpc } from '../utils/trpc'
+import React, { useEffect, useState, memo, useMemo } from 'react'
 import {
   Box,
   Modal,
@@ -25,7 +24,9 @@ import {
   Divider,
   CheckboxGroup,
   Checkbox,
-  Flex
+  Flex,
+  useToast,
+  Icon
 } from '@chakra-ui/react'
 import { BiEdit } from 'react-icons/bi'
 import {
@@ -41,17 +42,43 @@ import {
   GiGarlic
 } from 'react-icons/gi'
 import Image from 'next/image'
-import type { Dish, Allergen, UpdateDish } from '../types'
+import type { UpdateDish } from '../types'
 
-interface Props {
+function ImageComponent(props: any) {
+  console.log('image component re-rendered')
+  return (
+    <Image
+      src={props.src}
+      layout={props.layout}
+      width={props.width}
+      height={props.height}
+      alt={props.alt}
+      priority={props.priority}
+      placeholder={props.placeholder}
+      blurDataURL={props.blurDataURL}
+      objectFit={props.objectFit}
+    />
+  )
+}
+// prevent un-necessary re-rendering of ImageComponent
+const MemoedImageComponent = memo(ImageComponent, (prevProps, nextProps) => {
+  return prevProps.src === nextProps.src
+})
+
+interface UpdateFoodModalProps {
   isOpen: boolean
   onClose: () => void
   handleDishUpdate: (data: UpdateDish) => Promise<void>
-  dish: Dish
+  dish: UpdateDish
   uid: string
+  allergens: any
+  menus: any
+  handleDishDelete: (id: string) => Promise<void>
 }
 
-function UpdateFoodNoteModal(props: Props) {
+function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
+  const toast = useToast()
+
   const [selectedFile, setSelectedFile] = useState<any | null>() // the image file
   const [name, setName] = useState(props.dish.name)
   const [description, setDescription] = useState(props.dish.description)
@@ -59,19 +86,50 @@ function UpdateFoodNoteModal(props: Props) {
     props.dish.advertisedDescription
   )
   // loop through all allergens and set the state to an array of their ids
-  const [allergens, setAllergens] = useState(
-    props.dish?.allergens?.map((allergen: any) => allergen.id)
-  )
+  const allergenIds = props.dish?.allergens?.map((allergen: any) => allergen.id)
+  const [allergens, setAllergens] = useState(allergenIds)
+
+  // loop through all menus and set the state to an array of their ids
+  const menuIds = props.dish?.menu?.map((menu: any) => menu.id)
+  const [menus, setMenus] = useState(menuIds)
 
   const [price, setPrice] = useState(props.dish.price)
   const format = (val: number) => `$` + val
-  // grab allergens from database
-  const getAllergens = trpc.useQuery(['allergens.getAllergens'])
 
-  // console.log('allergens', allergens) on change
+  // reset the form when the modal is closed
   useEffect(() => {
-    console.log('allergens', allergens)
-  }, [allergens])
+    if (!props.isOpen) {
+      setName(props.dish.name)
+      setDescription(props.dish.description)
+      setAdvertisedDescription(props.dish.advertisedDescription)
+      setAllergens(props.dish?.allergens?.map((allergen: any) => allergen.id))
+      setMenus(props.dish?.menu?.map((menu: any) => menu.id))
+      setPrice(props.dish.price)
+      setSelectedFile(null)
+    }
+  }, [props.isOpen, props.dish])
+
+  // check if the user has edited the dish, and if so, confirm that they want to discard their changes
+  const handleOnClose = () => {
+    if (
+      selectedFile ||
+      name !== props.dish.name ||
+      description !== props.dish.description ||
+      advertisedDescription !== props.dish.advertisedDescription ||
+      allergens !== allergenIds ||
+      menus !== menuIds ||
+      price !== props.dish.price
+    ) {
+      const confirmation = window.confirm(
+        'Are you sure you want to close this modal? All changes will be lost.'
+      )
+      if (confirmation) {
+        props.onClose()
+      }
+    } else {
+      props.onClose()
+    }
+  }
 
   // this function is called when the user selects a file it only works with one file at a time
   const onSelectFile = (e: any) => {
@@ -83,6 +141,20 @@ function UpdateFoodNoteModal(props: Props) {
     setSelectedFile(e.target.files[0])
   }
 
+  // this function gets called every time the Image component is rendered
+  const handleImageDisplay = useMemo(() => {
+    // if there is a new image selected, preview it
+    // if user has selected an image, display the image
+    if (selectedFile) {
+      const objectUrl = URL.createObjectURL(selectedFile)
+      return objectUrl
+    } else {
+      // else, display the image from the database
+      return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
+    }
+  }, [selectedFile, props.dish.imageId])
+
+  // this function is called when the user clicks the submit button
   const uploadImage = async (files: any) => {
     const data: any = new FormData()
     data.append('file', files)
@@ -100,17 +172,7 @@ function UpdateFoodNoteModal(props: Props) {
     return cloudinaryResponseJson.public_id
   }
 
-  // if there is a new image selected, preview it
-  const handleImageDisplay = () => {
-    // if user has selected an image, display the image
-    if (selectedFile) {
-      const objectUrl = URL.createObjectURL(selectedFile)
-      return objectUrl
-    }
-    // else, display the image from the database
-    return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
-  }
-
+  // this function gets called when the user clicks the submit button
   const handleUpdate = async () => {
     if (selectedFile) {
       // if there is a new image selected, upload it to cloudinary
@@ -152,7 +214,33 @@ function UpdateFoodNoteModal(props: Props) {
         console.log('Dish updated')
       })
       props.onClose()
+      // display a success toast
+      toast({
+        title: 'Dish Updated',
+        description: 'Your dish has been created',
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+        position: 'top'
+      })
     }
+  }
+
+  // this function gets called when the user clicks the delete button
+  const handleDelete = async () => {
+    props.handleDishDelete(props.dish.id).then(() => {
+      console.log('Dish deleted')
+    })
+    props.onClose()
+    // display a success toast
+    toast({
+      title: 'Dish Deleted',
+      description: 'Your dish has been deleted',
+      status: 'info',
+      duration: 5000,
+      isClosable: true,
+      position: 'top'
+    })
   }
 
   const assignIcons: any = {
@@ -168,11 +256,25 @@ function UpdateFoodNoteModal(props: Props) {
     treenut: <GiAlmond />
   }
 
+  const ImageParams = useMemo(() => {
+    return {
+      src: handleImageDisplay,
+      alt: 'Dish Image',
+      layout: 'responsive',
+      width: '400px',
+      height: '283.5px',
+      priority: true,
+      placeholder: 'blur',
+      objectFit: 'contain',
+      blurDataURL: handleImageDisplay
+    }
+  }, [handleImageDisplay])
+
   return (
     <Modal
       blockScrollOnMount={true}
       isOpen={props.isOpen}
-      onClose={props.onClose}
+      onClose={handleOnClose}
       size={{ base: 'full', md: 'xl' }}
     >
       <ModalOverlay />
@@ -192,20 +294,7 @@ function UpdateFoodNoteModal(props: Props) {
                 overflow="hidden"
                 boxShadow={'xl'}
               >
-                <Image
-                  src={handleImageDisplay()}
-                  layout="responsive"
-                  width="400px"
-                  height="283.5px"
-                  // fit="cover"
-                  // rounded={'md'}
-                  // align={'center'}
-                  alt={'product image'}
-                  quality="100"
-                  priority={true}
-                  placeholder="blur"
-                  blurDataURL={handleImageDisplay()}
-                />
+                <MemoedImageComponent {...ImageParams} />
                 <IconButton
                   colorScheme={'blue'}
                   aria-label="upload new image"
@@ -231,6 +320,24 @@ function UpdateFoodNoteModal(props: Props) {
               </Box>
             </FormControl>
             <Divider />
+            <FormControl isRequired>
+              <FormLabel as="legend">Menus</FormLabel>
+              <FormHelperText>{'Please select all that apply'}</FormHelperText>
+              <CheckboxGroup value={menus} onChange={value => setMenus(value)}>
+                <Flex wrap={'wrap'} gap="4" pt="4">
+                  {/* loop through allergens in database */}
+                  {props.menus?.map((menu: any) => (
+                    <Checkbox key={menu.id} value={menu.id} colorScheme="blue">
+                      <Flex gap={1} alignItems="center">
+                        {menu.name?.charAt(0).toUpperCase() +
+                          menu.name?.slice(1)}
+                        {assignIcons[menu.name]}
+                      </Flex>
+                    </Checkbox>
+                  ))}
+                </Flex>
+              </CheckboxGroup>
+            </FormControl>
             <FormControl isRequired>
               <FormLabel as="legend">Name</FormLabel>
               <Input
@@ -267,7 +374,7 @@ function UpdateFoodNoteModal(props: Props) {
               />
             </FormControl>
             <FormControl>
-              <FormLabel as="legend">Description</FormLabel>
+              <FormLabel as="legend">Descrption</FormLabel>
               <FormHelperText>
                 {`How you would describe it to a customer`}
               </FormHelperText>
@@ -287,15 +394,15 @@ function UpdateFoodNoteModal(props: Props) {
               >
                 <Flex wrap={'wrap'} gap="4" pt="4">
                   {/* loop through allergens in database */}
-                  {getAllergens.data?.map((allergen: any) => (
+                  {props.allergens?.map((allergen: any) => (
                     <Checkbox
                       key={allergen.id}
                       value={allergen.id}
                       colorScheme="blue"
                     >
                       <Flex gap={1} alignItems="center">
-                        {allergen.name.charAt(0).toUpperCase() +
-                          allergen.name.slice(1)}
+                        {allergen.name?.charAt(0).toUpperCase() +
+                          allergen.name?.slice(1)}
                         {assignIcons[allergen.name]}
                       </Flex>
                     </Checkbox>
@@ -306,12 +413,23 @@ function UpdateFoodNoteModal(props: Props) {
           </VStack>
         </ModalBody>
         <ModalFooter>
-          <Button colorScheme="gray" mr={3} onClick={props.onClose}>
-            Cancel
-          </Button>
-          <Button variant="outline" colorScheme="blue" onClick={handleUpdate}>
-            Save
-          </Button>
+          <Flex justify="space-between" width="full">
+            <Button
+              colorScheme={'red'}
+              variant="outline"
+              onClick={handleDelete}
+            >
+              Delete
+            </Button>
+            <Box>
+              <Button colorScheme="gray" mr={3} onClick={handleOnClose}>
+                Cancel
+              </Button>
+              <Button colorScheme="blue" onClick={handleUpdate}>
+                Save
+              </Button>
+            </Box>
+          </Flex>
         </ModalFooter>
       </ModalContent>
     </Modal>

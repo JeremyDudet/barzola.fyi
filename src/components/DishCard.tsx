@@ -10,23 +10,20 @@ import {
   IconButton,
   useColorModeValue
 } from '@chakra-ui/react'
-import { Dish, Menu, UpdateDish } from '../types'
+import { Menu, UpdateDish } from '../types'
 import { BsThreeDotsVertical } from 'react-icons/bs'
 
 interface Props {
-  dish: Dish
+  dish: any
   userAuth: string
   handleDishUpdate: (data: UpdateDish) => Promise<void>
   uid: string
   allergens: any
+  menus: any
+  handleDishDelete: (id: string) => Promise<void>
 }
 
-export default function Index({
-  dish,
-  userAuth,
-  handleDishUpdate,
-  uid
-}: Props) {
+export default function Index(props: Props) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const {
     isOpen: isOpenUpdate,
@@ -34,30 +31,9 @@ export default function Index({
     onClose: onCloseUpdate
   } = useDisclosure()
 
-  // // in an array of menus - add an & before the last menu instead of a comma
-  // const menuList = () => {
-  //   const menus = dish.menu
-  //   let menuString = ''
-  //   menus?.forEach((menu: Menu, index?: number) => {
-  //     // if this is the first one, don't add an & or comma
-  //     if (index === 0) {
-  //       menuString += menu.name
-  //     }
-  //     // if menus.length is longer than 1, and this is the last one, add an & before it
-  //     if (menus.length !== 1 && index === menus.length - 1) {
-  //       menuString += ` & ${menu.name}`
-  //     }
-  //     // if this is neither the first nor last, add a comma
-  //     if (index !== 0 && index !== menus.length - 1) {
-  //       menuString += `, ${menu.name}`
-  //     }
-  //   })
-  //   return (menuString += ' menu')
-  // }
-
   const handleDisplayedImage = () => {
-    if (dish.imageId) {
-      return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${dish.imageId}`
+    if (props.dish.imageId) {
+      return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
     } else {
       return '/images/placeholder.png'
     }
@@ -79,13 +55,16 @@ export default function Index({
 
   return (
     <>
-      <FoodNoteModal dish={dish} isOpen={isOpen} onClose={onClose} />
+      <FoodNoteModal dish={props.dish} isOpen={isOpen} onClose={onClose} />
       <UpdateFoodNoteModal
-        uid={uid}
-        dish={dish}
+        uid={props.uid}
+        dish={props.dish}
         isOpen={isOpenUpdate}
         onClose={onCloseUpdate}
-        handleDishUpdate={handleDishUpdate}
+        handleDishUpdate={props.handleDishUpdate}
+        menus={props.menus}
+        allergens={props.allergens}
+        handleDishDelete={props.handleDishDelete}
       />
       <Flex flexDirection="column">
         <Text
@@ -93,7 +72,7 @@ export default function Index({
           fontSize="xs"
           textColor={useColorModeValue('gray.400', 'gray.500')}
         >
-          {handleDisplayMenuName(dish)}
+          {handleDisplayMenuName(props.dish)}
         </Text>
         <Flex alignItems="start" gap="10px">
           <Box
@@ -107,6 +86,8 @@ export default function Index({
             overflow="hidden"
             position="relative"
             boxShadow="base"
+            onClick={onOpen}
+            cursor="pointer"
           >
             <Image
               src={handleDisplayedImage()}
@@ -116,7 +97,13 @@ export default function Index({
               height="3rem"
             />
           </Box>
-          <Flex flexDir="column" width="100%" height="100%" onClick={onOpen}>
+          <Flex
+            flexDir="column"
+            width="100%"
+            height="100%"
+            onClick={onOpen}
+            cursor={'pointer'}
+          >
             <Flex
               justifyContent="space-between"
               alignItems="center"
@@ -124,16 +111,16 @@ export default function Index({
               marginTop="-3px"
             >
               <Heading fontSize="lg" textTransform="uppercase">
-                {dish.name}
+                {props.dish.name}
               </Heading>
               <Text
                 justifySelf="flex-end"
                 fontSize="16px"
                 fontWeight="semibold"
-              >{`${dish.price}`}</Text>
+              >{`${props.dish.price}`}</Text>
             </Flex>
             <Text fontSize="xs" textTransform="uppercase">
-              {dish.advertisedDescription}
+              {props.dish.advertisedDescription}
             </Text>
           </Flex>
           <Flex>
@@ -142,7 +129,9 @@ export default function Index({
               onClick={onOpenUpdate}
               style={{
                 display: `${
-                  userAuth === 'admin' || userAuth === 'kitchen' ? '' : 'none'
+                  props.userAuth === 'admin' || props.userAuth === 'kitchen'
+                    ? ''
+                    : 'none'
                 }`
               }}
             >

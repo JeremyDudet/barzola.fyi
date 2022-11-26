@@ -81,10 +81,10 @@ export const dishesRouter = createRouter()
           price: input.price,
           imageId: input.imageId,
           allergens: {
-            connect: input.allergens?.map((allergen) => ({ id: allergen })),
+            set: input.allergens?.map((allergen) => ({ id: allergen })),
           },
           menu: {
-            connect: input.menus?.map((menu) => ({ id: menu })),
+            set: input.menus?.map((menu) => ({ id: menu })),
           }
         },
       })
@@ -119,6 +119,7 @@ export const dishesRouter = createRouter()
       price: z.number(), 
       imageId: z.string(),
       allergens: z.array(z.string()).optional(),
+      menu: z.array(z.string()).optional(),
       lastEditedById: z.string(),
     }),
     async resolve({ ctx, input }) {
@@ -132,6 +133,9 @@ export const dishesRouter = createRouter()
           // add the allergens to the dish
           allergens: {
             connect: input.allergens?.map((id) => ({ id })),
+          },
+          menu: {
+            connect: input.menu?.map((id) => ({ id })),
           },
           // add the lastEditedBy to the dish
           lastEditedBy: {

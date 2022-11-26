@@ -117,6 +117,10 @@ export default function FoodNoteModal(props: Props) {
     return allergens.join(', ')
   }
 
+  const myLoader = () => {
+    return `https://res.cloudinary.com/zola-barzola/image/upload/v1668204345/${props.dish.imageId}`
+  }
+
   // if user data is loading, show loading
   if (getUserById.status === 'loading') {
     return <div>Loading...</div>
@@ -151,29 +155,37 @@ export default function FoodNoteModal(props: Props) {
             overflow="hidden"
           >
             <Image
+              loader={myLoader}
               src={handleDisplayedImage()}
               layout="responsive"
               width="400px"
               height="283.5px"
-              // fit="cover"
-              // rounded={'md'}
-              // align={'center'}
               alt={'product image'}
               quality="100"
               priority={true}
+              objectFit="cover"
             />
           </Box>
           <Stack>
-            <Box as={'header'}>
-              <Heading lineHeight={1.1} fontWeight={600} fontSize={'2xl'}>
-                {props.dish.name.toUpperCase()}
-              </Heading>
+            <Flex flexDir="column" gap={2}>
+              <Flex as={'header'} alignItems="center" justify={'space-between'}>
+                <Heading fontWeight={600} fontSize={'2xl'}>
+                  {props.dish.name.toUpperCase()}
+                </Heading>
+                <Text
+                  color={HandleUseColorModeValue('gray.900', 'gray.400')}
+                  fontWeight={300}
+                  fontSize={'2xl'}
+                >{`$${props.dish.price}`}</Text>
+              </Flex>
               <Text
-                color={HandleUseColorModeValue('gray.900', 'gray.400')}
-                fontWeight={300}
-                fontSize={'2xl'}
-              >{`$${props.dish.price}`}</Text>
-            </Box>
+                color={HandleUseColorModeValue('gray.500', 'gray.400')}
+                fontSize={'xl'}
+                fontWeight={'400'}
+              >
+                {props.dish.advertisedDescription.toLocaleLowerCase()}
+              </Text>
+            </Flex>
             <Stack
               spacing={{ base: 4, sm: 6 }}
               direction="column"
@@ -183,33 +195,27 @@ export default function FoodNoteModal(props: Props) {
                 />
               }
             >
-              <VStack spacing={{ base: 4, sm: 6 }}>
-                <Text
-                  color={HandleUseColorModeValue('gray.500', 'gray.400')}
-                  fontSize={'xl'}
-                  fontWeight={'400'}
-                >
-                  {props.dish.advertisedDescription.toLocaleLowerCase()}
-                </Text>
-              </VStack>
-              <Box>
-                <Text
-                  fontSize={{ base: '16px', lg: '18px' }}
-                  color={HandleUseColorModeValue('yellow.500', 'yellow.300')}
-                  fontWeight={'500'}
-                  textTransform={'uppercase'}
-                  mb={'4'}
-                >
-                  Description
-                </Text>
-                <Text
-                  color={HandleUseColorModeValue('gray.600', 'gray.400')}
-                  fontSize={'xl'}
-                  fontWeight={'400'}
-                >
-                  {props.dish.description}
-                </Text>
-              </Box>
+              <VStack spacing={{ base: 4, sm: 6 }}></VStack>
+              {props.dish.description ? (
+                <Box>
+                  <Text
+                    fontSize={{ base: '16px', lg: '18px' }}
+                    color={HandleUseColorModeValue('yellow.500', 'yellow.300')}
+                    fontWeight={'500'}
+                    textTransform={'uppercase'}
+                    mb={'4'}
+                  >
+                    Description
+                  </Text>
+                  <Text
+                    color={HandleUseColorModeValue('gray.600', 'gray.400')}
+                    fontSize={'xl'}
+                    fontWeight={'400'}
+                  >
+                    {props.dish.description}
+                  </Text>
+                </Box>
+              ) : null}
               <Box>
                 <Text
                   fontSize={{ base: '16px', lg: '18px' }}
