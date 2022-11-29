@@ -175,19 +175,6 @@ export default function Index() {
     return menuName
   }
 
-  // check if the menu has any dishes in it, if not, return false
-  function checkIfMenuHasDishes(menuId: string) {
-    let hasDishes = false
-    getActiveDishes.data?.forEach((dish: any) => {
-      dish.menu?.forEach((menu: Menu) => {
-        if (menu.id === menuId) {
-          hasDishes = true
-        }
-      })
-    })
-    return hasDishes
-  }
-
   return (
     <>
       <NewDishModal

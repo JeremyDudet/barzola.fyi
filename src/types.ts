@@ -131,15 +131,19 @@ export interface Dish {
   imageId: string
 }
 
+interface AllergenIds {
+  id: string
+}
+
 export interface UpdateDish {
   id: string
   name: string
   description: string
   advertisedDescription: string
   price: number
-  menu: string[] | null
+  menu?: string[]
   menuSection: MenuSection | null
-  allergens?: string[]
+  allergens: AllergenIds[]
   lastEdited?: Date
   lastEditedById: string
   imageId: string

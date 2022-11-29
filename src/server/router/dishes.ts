@@ -65,8 +65,8 @@ export const dishesRouter = createRouter()
       advertisedDescription: z.string(), 
       price: z.number(), 
       imageId: z.string(),
-      allergens: z.array(z.string()).optional(),
-      menus: z.array(z.string()).optional(),
+      allergens: z.array(z.object({id: z.string()})).optional(),
+      menu: z.array(z.object({id: z.string()})).optional(),
     }),
     async resolve({ ctx, input }) {
       // update a user in the database based on the id
@@ -81,11 +81,22 @@ export const dishesRouter = createRouter()
           price: input.price,
           imageId: input.imageId,
           allergens: {
-            set: input.allergens?.map((allergen) => ({ id: allergen })),
+            set: input.allergens
           },
           menu: {
-            set: input.menus?.map((menu) => ({ id: menu })),
-          }
+            set: input.menu
+          },
+          // replace current allergens with new ones
+          // allergens: {
+          //   connect: input.allergens?.map((allergen) => ({
+          //     id: allergen,
+          //   })),
+          // },
+          // menu: {
+          //   connect: input.menu?.map((menu) => ({
+          //     id: menu,
+          //   })),
+          // },
         },
       })
       return dish

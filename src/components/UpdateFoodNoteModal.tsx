@@ -25,8 +25,7 @@ import {
   CheckboxGroup,
   Checkbox,
   Flex,
-  useToast,
-  Icon
+  useToast
 } from '@chakra-ui/react'
 import { BiEdit } from 'react-icons/bi'
 import {
@@ -86,7 +85,8 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
     props.dish.advertisedDescription
   )
   // loop through all allergens and set the state to an array of their ids
-  const allergenIds = props.dish?.allergens?.map((allergen: any) => allergen.id)
+
+  const allergenIds = props.dish?.allergens?.map((allergen: any) => allergen.id) // return the id of each allergen
   const [allergens, setAllergens] = useState(allergenIds)
 
   // loop through all menus and set the state to an array of their ids
@@ -95,40 +95,79 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
 
   const [price, setPrice] = useState(props.dish.price)
   const format = (val: number) => `$` + val
+  const [isWriting, setIsWriting] = useState(false)
 
   // reset the form when the modal is closed
-  useEffect(() => {
-    if (!props.isOpen) {
-      setName(props.dish.name)
-      setDescription(props.dish.description)
-      setAdvertisedDescription(props.dish.advertisedDescription)
-      setAllergens(props.dish?.allergens?.map((allergen: any) => allergen.id))
-      setMenus(props.dish?.menu?.map((menu: any) => menu.id))
-      setPrice(props.dish.price)
-      setSelectedFile(null)
-    }
-  }, [props.isOpen, props.dish])
+  // useEffect(() => {
+  //   if (!props.isOpen) {
+  //     setName(props.dish.name)
+  //     setDescription(props.dish.description)
+  //     setAdvertisedDescription(props.dish.advertisedDescription)
+  //     setAllergens(props.dish?.allergens?.map((allergen: any) => allergen.id))
+  //     setMenus(props.dish?.menu?.map((menu: any) => menu.id))
+  //     setPrice(props.dish.price)
+  //     setSelectedFile(null)
+  //   }
+  // }, [props.isOpen, props.dish])
 
-  // check if the user has edited the dish, and if so, confirm that they want to discard their changes
-  const handleOnClose = () => {
+  // check to see if the user has edited the form
+  useEffect(() => {
     if (
       selectedFile ||
       name !== props.dish.name ||
       description !== props.dish.description ||
       advertisedDescription !== props.dish.advertisedDescription ||
-      allergens !== allergenIds ||
+      price !== props.dish.price ||
       menus !== menuIds ||
-      price !== props.dish.price
+      allergens !== allergenIds
     ) {
-      const confirmation = window.confirm(
-        'Are you sure you want to close this modal? All changes will be lost.'
-      )
-      if (confirmation) {
-        props.onClose()
-      }
+      setIsWriting(true)
     } else {
-      props.onClose()
+      setIsWriting(false)
     }
+  }, [
+    selectedFile,
+    name,
+    description,
+    advertisedDescription,
+    price,
+    allergens,
+    menus,
+    props.dish.name,
+    props.dish.description,
+    props.dish.advertisedDescription,
+    props.dish.price,
+    allergenIds,
+    menuIds
+  ])
+
+  // reset the form to the original values when the user clicks cancel
+  const clearForm = () => {
+    setName(props.dish.name)
+    setDescription(props.dish.description)
+    setAdvertisedDescription(props.dish.advertisedDescription)
+    setAllergens(props.dish?.allergens?.map((allergen: any) => allergen.id))
+    setMenus(props.dish?.menu?.map((menu: any) => menu.id))
+    setPrice(props.dish.price)
+    setSelectedFile(null)
+    setIsWriting(false)
+  }
+
+  // check if the user has edited the dish, and if so, confirm that they want to discard their changes
+  const handleClose = () => {
+    // if the user has edited the form, ask them if they want to close the modal
+    if (isWriting) {
+      const confirmClose = confirm(
+        'Are you sure you want to close? Your changes will not be saved.'
+      )
+      if (confirmClose) {
+        props.onClose()
+        clearForm()
+        return
+      }
+      return
+    }
+    props.onClose()
   }
 
   // this function is called when the user selects a file it only works with one file at a time
@@ -186,10 +225,10 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
         advertisedDescription,
         price,
         imageId: imageid,
-        menu: props.dish.menu,
+        menu: formatIntoArrayOfObjects(menus),
         menuSection: props.dish.menuSection,
         lastEditedById: props.uid,
-        allergens: allergens
+        allergens: formatIntoArrayOfObjects(allergens)
       }
       props.handleDishUpdate(data).then(() => {
         console.log('Dish updated')
@@ -205,10 +244,10 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
         advertisedDescription,
         price,
         imageId: props.dish.imageId,
-        menu: props.dish.menu,
+        menu: formatIntoArrayOfObjects(menus),
         menuSection: props.dish.menuSection,
         lastEditedById: props.uid,
-        allergens: allergens
+        allergens: formatIntoArrayOfObjects(allergens)
       }
       props.handleDishUpdate(data).then(() => {
         console.log('Dish updated')
@@ -270,11 +309,18 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
     }
   }, [handleImageDisplay])
 
+  // take string[] and return array of objects {id: string}
+  const formatIntoArrayOfObjects = (ids: any) => {
+    return ids.map((id: any) => {
+      return { id: id }
+    })
+  }
+
   return (
     <Modal
       blockScrollOnMount={true}
       isOpen={props.isOpen}
-      onClose={handleOnClose}
+      onClose={handleClose}
       size={{ base: 'full', md: 'xl' }}
     >
       <ModalOverlay />
@@ -422,7 +468,7 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
               Delete
             </Button>
             <Box>
-              <Button colorScheme="gray" mr={3} onClick={handleOnClose}>
+              <Button colorScheme="gray" mr={3} onClick={handleClose}>
                 Cancel
               </Button>
               <Button colorScheme="blue" onClick={handleUpdate}>

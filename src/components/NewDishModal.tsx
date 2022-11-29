@@ -220,8 +220,9 @@ function UpdateFoodNoteModal(props: Props) {
         clearForm()
         return
       }
-      props.onClose()
+      return
     }
+    props.onClose()
   }
 
   const assignIcons: any = {
@@ -243,7 +244,7 @@ function UpdateFoodNoteModal(props: Props) {
       <Modal
         blockScrollOnMount={true}
         isOpen={props.isOpen}
-        onClose={props.onClose}
+        onClose={handleClose}
         size={{ base: 'full', md: 'xl' }}
       >
         <ModalOverlay />
