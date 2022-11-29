@@ -131,7 +131,7 @@ export interface Dish {
   imageId: string
 }
 
-interface AllergenIds {
+interface ObjectIds {
   id: string
 }
 
@@ -141,9 +141,9 @@ export interface UpdateDish {
   description: string
   advertisedDescription: string
   price: number
-  menu?: string[]
+  menu?: ObjectIds[]
   menuSection: MenuSection | null
-  allergens: AllergenIds[]
+  allergens: ObjectIds[]
   lastEdited?: Date
   lastEditedById: string
   imageId: string
