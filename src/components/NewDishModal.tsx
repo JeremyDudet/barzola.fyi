@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, memo, useMemo } from 'react'
 import {
   Box,
   Modal,
@@ -43,6 +43,27 @@ import {
 import { BiEdit } from 'react-icons/bi'
 import Image from 'next/image'
 import type { NewDish, Allergen } from '../types'
+
+function ImageComponent(props: any) {
+  console.log('image component re-rendered')
+  return (
+    <Image
+      src={props.src}
+      layout={props.layout}
+      width={props.width}
+      height={props.height}
+      alt={props.alt}
+      priority={props.priority}
+      placeholder={props.placeholder}
+      blurDataURL={props.blurDataURL}
+      objectFit={props.objectFit}
+    />
+  )
+}
+// prevent un-necessary re-rendering of ImageComponent
+const MemoedImageComponent = memo(ImageComponent, (prevProps, nextProps) => {
+  return prevProps.src === nextProps.src
+})
 
 interface Props {
   isOpen: boolean
@@ -126,15 +147,13 @@ function UpdateFoodNoteModal(props: Props) {
   }
 
   // if there is a new image selected, preview it
-  const handleImageDisplay = () => {
+  const handleImageDisplay = useMemo(() => {
     // if user has selected an image, display the image
     if (selectedFile) {
       const objectUrl: any = URL.createObjectURL(selectedFile)
       return objectUrl
     }
-    // else, display the image from the database
-    // return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
-  }
+  }, [selectedFile])
 
   const handleSubmit = async () => {
     // check if there if all required fields are filled
@@ -238,6 +257,20 @@ function UpdateFoodNoteModal(props: Props) {
     treenut: <GiAlmond />
   }
 
+  const ImageParams = useMemo(() => {
+    return {
+      src: handleImageDisplay,
+      alt: 'Dish Image',
+      layout: 'responsive',
+      width: '400px',
+      height: '283.5px',
+      priority: true,
+      placeholder: 'blur',
+      objectFit: 'contain',
+      blurDataURL: handleImageDisplay
+    }
+  }, [handleImageDisplay])
+
   return (
     <>
       {console.log(props.uid)}
@@ -266,18 +299,7 @@ function UpdateFoodNoteModal(props: Props) {
                 >
                   {selectedFile ? (
                     <>
-                      <Image
-                        src={handleImageDisplay()}
-                        layout="responsive"
-                        width="400px"
-                        height="283.5px"
-                        alt={'product image'}
-                        quality="100"
-                        priority={true}
-                        placeholder="blur"
-                        blurDataURL={handleImageDisplay()}
-                        objectFit="contain"
-                      />
+                      <MemoedImageComponent {...ImageParams} />
                       <IconButton
                         colorScheme={'blue'}
                         aria-label="upload new image"

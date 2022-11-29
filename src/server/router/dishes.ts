@@ -86,17 +86,6 @@ export const dishesRouter = createRouter()
           menu: {
             set: input.menu
           },
-          // replace current allergens with new ones
-          // allergens: {
-          //   connect: input.allergens?.map((allergen) => ({
-          //     id: allergen,
-          //   })),
-          // },
-          // menu: {
-          //   connect: input.menu?.map((menu) => ({
-          //     id: menu,
-          //   })),
-          // },
         },
       })
       return dish
