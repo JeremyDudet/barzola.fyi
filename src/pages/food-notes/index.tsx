@@ -87,7 +87,7 @@ export default function Index() {
   const updateDish = trpc.useMutation('dishes.updateDish')
   const deleteDish = trpc.useMutation('dishes.deleteDish')
 
-  const allergens = getAllergens.data // grab all the allergens
+  const allergens = getAllergens.data?.map(allergenId => ({ id: allergenId })) // grab all the allergens
 
   const [search, setSearch] = useState<string>('')
   const [filteredMenuIds, setFilteredMenuIds] = useState<string[]>()
@@ -202,11 +202,11 @@ export default function Index() {
             New Dish
           </Button>
         </Flex>
-        <SearchBar
+        {/* <SearchBar
           search={search}
           setSearch={setSearch}
           placeholder="Search by name, component, allergen, or menu"
-        />
+        /> */}
         <FilterAccordion
           menus={getFoodMenus.data}
           setFilteredMenus={setFilteredMenuIds}
