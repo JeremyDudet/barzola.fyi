@@ -1,19 +1,3 @@
-// todo
-// [x] add logout button
-// [x] fix the drawer opening on large screens
-
-/* 
-  This is the main layout for the app.
-
-  [x] This layout is used in all pages.
-
-  [x] It contains the header, sidebar, and footer.
-  [x] It also contains the drawer for mobile screens.
-  [x] Children components are rendered inside the main content area.
-
-  [] Depending on user Authorization: 
-      some Admin links are shown in the sidebar.
-*/
 import Logo from '../Logo'
 import NextLink from 'next/link'
 import ThemeToggleButton from '../theme-toggle-button'

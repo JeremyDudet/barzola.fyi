@@ -52,8 +52,57 @@ model Task {
   description  String
   createdAt    DateTime @default(now())
   lastEdited   DateTime @updatedAt
-  priority     Int
-  assignedToId String
+  roleId       String
+  role         Role     @relation(fields: [roleId], references: [id]) // a task can only belong to one role
+  doTimeId     String
+  doTime       DoTime   @relation(fields: [doTimeId], references: [id]) // a task can only belong to one do time
+
+  @@index([roleId])
+  @@index([doTimeId])
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String
+  description String @default("") @db.LongText
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  tasks       Task[] // one role can have many tasks
+  subDepartment SubDepartment @relation(fields: [subDepartmentId], references: [id]) // a role can only belong to one department
+  subDepartmentId String
+
+  @@index([subDepartmentId])
+}
+
+model Department {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @db.LongText
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  subDepartments SubDepartment[] // one department can have many sub departments
+}
+
+model SubDepartment {
+  id          String   @id @default(cuid())
+  name        String
+  description String   @db.LongText
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  department Department @relation(fields: [departmentId], references: [id]) // a sub department can only belong to one department
+  departmentId String
+  roles       Role[] // one sub department can have many roles
+
+  @@index([departmentId])
+}
+
+model DoTime {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  lastEdited  DateTime @updatedAt
+  tasks       Task[] // one do time can have many tasks
 }
 
 model Day {
@@ -85,6 +134,8 @@ model JuiceRequest {
   notes             String?
   createdAt         DateTime @default(now())
   lastEdited        DateTime @updatedAt
+
+  @@index([requestFromId])
 }
 
 model Menu {
@@ -106,12 +157,14 @@ model MenuSection {
   menus        Menu    @relation(fields: [menuId], references: [id]) // a menu section can only belong to one menu
   menuId      String
   dishes      Dish[] // one menu section can have many dishes
+
+  @@index([menuId])
 }
 
 model Dish {
   id          String   @id @default(cuid())
   name        String
-  description String
+  description String   @db.LongText
   advertisedDescription String?
   price       Float
   createdAt   DateTime @default(now())
@@ -124,6 +177,8 @@ model Dish {
   lastEditedBy User @relation(fields: [lastEditedById], references: [id]) // a dish can only have one last editor
   lastEditedById String
   active      Boolean @default(true)
+
+  @@index([lastEditedById])
 }
 
 model Component {

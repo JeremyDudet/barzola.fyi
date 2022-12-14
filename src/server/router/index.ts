@@ -11,6 +11,8 @@ import { juiceRequestsRouter } from './juiceRequests'
 import { dishesRouter } from './dishes'
 import { allergensRouter } from './allergens'
 import { menusRouter } from './menus'
+import { tasksRouter } from './tasks'
+import { rolesRouter } from './roles'
 
 
 export const appRouter = createRouter() // centralized point for all of our resolvers
@@ -21,5 +23,7 @@ export const appRouter = createRouter() // centralized point for all of our reso
   .merge("dishes.", dishesRouter) // merge the dish router into the app router")
   .merge("menus.", menusRouter) // merge the menu router into the app router")
   .merge("allergens.", allergensRouter) // merge the allergens router into the app router")
+  .merge("tasks.", tasksRouter) // merge the task router into the app router
+  .merge("roles.", rolesRouter) // merge the task router into the app router
 // export type definition of API
 export type AppRouter = typeof appRouter

@@ -106,14 +106,77 @@
 //   )
 // }
 
-// export default Index
 import { useAuthContext } from '../../context/AuthContext' // import User state
 import LoginForm from '../../components/LoginForm'
+import { trpc } from '../../utils/trpc'
+import {
+  Box,
+  Heading,
+  Flex,
+  Text,
+  Select,
+  Divider,
+  Checkbox,
+  IconButton,
+  Button,
+  useDisclosure
+} from '@chakra-ui/react'
+import { AddIcon } from '@chakra-ui/icons'
+import NewTaskModal from '../../components/NewTaskModal'
 
 export default function Index() {
   const { user } = useAuthContext()
+  const getTasks = trpc.useQuery(['tasks.getTasks'])
+  const { isOpen, onOpen, onClose } = useDisclosure()
 
   if (!user.firstName) return <LoginForm /> // if user is not logged in, return Auth component
 
-  return <>tasks</>
+  function TaskItem({ task }: { task: any }) {
+    return (
+      <Box flex="1" textAlign="left" fontSize="1.1rem">
+        {task.name}
+      </Box>
+    )
+  }
+
+  return (
+    <>
+      <NewTaskModal isOpen={isOpen} onClose={onClose} />
+      <Box maxW="container.md">
+        <Flex justify="space-between">
+          <Heading>{'Tasks'}</Heading>
+          <Button
+            onClick={onOpen}
+            variant="outline"
+            leftIcon={<AddIcon />}
+            colorScheme="green"
+            style={{
+              display: `${user.auth === 'admin' ? '' : 'none'}`
+            }}
+          >
+            New Task
+          </Button>
+        </Flex>
+        <Flex alignItems="center" gap="10px">
+          <Text minW="fit-content">Select role:</Text>
+          <Select w="400px">
+            <option value="all">Opening - Server</option>
+            <option value="all">Opening - Backserver</option>
+            <option value="all">Opening - Host</option>
+            <option value="all">Opening - Barback</option>
+            <option value="all">Opening - Bartender</option>
+            <option value="" disabled>
+              ------------------------
+            </option>
+            <option value="all">Closing - Server</option>
+            <option value="all">Closing - Backserver</option>
+            <option value="all">Closing - Host</option>
+            <option value="all">Closing - Barback</option>
+            <option value="all">Closing - Bartender</option>
+          </Select>
+        </Flex>
+        <div>tasks</div>
+      </Box>
+    </>
+  )
 }

@@ -45,15 +45,7 @@ import {
   useToast
 } from '@chakra-ui/react'
 import { useAuthContext } from '../context/AuthContext'
-import type { User } from '../types'
-// import { User } from '../types' // import User type
-// import PasswordInput from './PasswordInput'
-
-// todo
-// [x] import users data from database
-// [x] check if password provided matches a user's password
-// [] if it does, login new user through context
-// [] fix input delete bug
+import { User } from '../types'
 
 export default function LoginForm() {
   // fetch array of user objects from database

@@ -1,8 +1,3 @@
-/*
-  This page is the main page for the food notes.
-  Here authorized users can add, edit, and delete food notes.
-*/
-
 import { useState, useCallback, useEffect } from 'react'
 import { trpc } from '../../utils/trpc'
 import {
@@ -24,7 +19,6 @@ import {
   Text
 } from '@chakra-ui/react'
 import { AddIcon } from '@chakra-ui/icons'
-import SearchBar from '../../components/SearchBar'
 import DishCard from '../../components/DishCard'
 import LoginForm from '../../components/LoginForm'
 import NewDishModal from '../../components/NewDishModal'
@@ -73,13 +67,8 @@ const FilterAccordion = (props: any) => {
   )
 }
 
-const MenuSection = (props: any) => {
-  return <Heading>{props.name}</Heading>
-}
-
 export default function Index() {
   const { user } = useAuthContext()
-  const utils = trpc.useContext()
   const getFoodMenus = trpc.useQuery(['menus.getFoodMenus']) // grab all the menus that are of menuType 'food'
   const getAllergens = trpc.useQuery(['allergens.getAllergens'])
   const createDish = trpc.useMutation('dishes.createDish')
@@ -89,7 +78,6 @@ export default function Index() {
 
   const allergens = getAllergens.data // grab all the allergens
 
-  const [search, setSearch] = useState<string>('')
   const [filteredMenuIds, setFilteredMenuIds] = useState<string[]>()
 
   const { isOpen, onOpen, onClose } = useDisclosure()
