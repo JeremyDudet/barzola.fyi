@@ -38,9 +38,15 @@ model User {
   alias           String?
   password        String         @unique
   auth            String         @default("user")
-  locked          Boolean        @default(false)
+  email           String
+  birthDate       DateTime
+  phoneNumber    String
+  status         String @default("active")
+  profileImageId  String
   juiceRequested  JuiceRequest[] @relation("UserOnRequest")
   editedDishes    Dish[]  // a user can edit many dishes
+  createdAt       DateTime       @default(now())
+  lastEdited      DateTime       @updatedAt
   
 
   @@unique([firstName, lastName, password])
