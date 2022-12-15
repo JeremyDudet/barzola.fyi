@@ -54,7 +54,12 @@ export const usersRouter = createRouter()
       lastName: z.string(), 
       alias: z.string().nullable(), 
       password: z.string().max(4), 
-      auth: z.string()
+      auth: z.string(),
+      email: z.string().email(),
+      birthDate: z.date(),
+      phoneNumber: z.string(),
+      status: z.string(),
+      profileImageId: z.string()
     }),
     async resolve({ ctx, input }) {
       await ctx.prisma.user.create({
@@ -64,6 +69,11 @@ export const usersRouter = createRouter()
           alias: input.alias,
           password: input.password,
           auth: input.auth,
+          email: input.email,
+          birthDate: input.birthDate,
+          phoneNumber: input.phoneNumber,
+          status: input.status,
+          profileImageId: input.profileImageId,
         },
       })    
     }

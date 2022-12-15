@@ -13,6 +13,11 @@ export interface NewUser {
   alias: string | null
   password: string
   auth: string
+  email: string
+  birthDate: Date
+  phoneNumber: string
+  status: string
+  profileImageId: string
 }
 
 export interface Task {

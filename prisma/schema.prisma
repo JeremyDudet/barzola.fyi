@@ -147,6 +147,8 @@ model JuiceRequest {
 model Menu {
   id          String   @id @default(cuid())
   name        String
+  description String   @db.LongText @default("")
+  isAvailable Boolean @default(true)
   createdAt   DateTime @default(now())
   lastEdited  DateTime @updatedAt
   menuType    String @default("food")
