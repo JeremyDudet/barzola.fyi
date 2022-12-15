@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react'
 import Image from 'next/image'
 import FoodNoteModal from './FoodNoteModal'
 import UpdateFoodNoteModal from './UpdateFoodNoteModal'
@@ -23,6 +24,24 @@ interface Props {
   handleDishDelete: (id: string) => Promise<void>
 }
 
+// this function is used to display the menu name(s) in the DishCard
+const HandleDisplayMenuName = (dish: any) => {
+  return useMemo(() => {
+    if (!dish.menu) {
+      return ''
+    }
+    if (dish.menu.length === 1) {
+      return dish.menu[0].name.toUpperCase()
+    }
+    if (dish.menu?.length > 1) {
+      return dish.menu
+        ?.map((menu: Menu) => menu.name)
+        .join(', ')
+        .toUpperCase()
+    }
+  }, [dish.menu])
+}
+
 export default function Index(props: Props) {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const {
@@ -31,27 +50,9 @@ export default function Index(props: Props) {
     onClose: onCloseUpdate
   } = useDisclosure()
 
-  const handleDisplayedImage = () => {
-    if (props.dish.imageId) {
-      return `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
-    } else {
-      return '/images/placeholder.png'
-    }
-  }
-
-  const handleDisplayMenuName = (dish: any) => {
-    // if there is only one menu, return the name of that menu
-    if (dish.menu?.length === 1) {
-      return dish.menu[0].name.toUpperCase()
-    }
-    // if there are multiple menus, return the name of all the menus
-    if (dish.menu?.length > 1) {
-      return dish.menu
-        ?.map((menu: Menu) => menu.name)
-        .join(', ')
-        .toUpperCase()
-    }
-  }
+  const URL = `https://res.cloudinary.com/zola-barzola/image/upload/v1665788285/${props.dish.imageId}`
+  const placeHolderURL =
+    'https://res.cloudinary.com/zola-barzola/image/upload/v1663360120/cld-sample-4.jpg'
 
   return (
     <>
@@ -72,29 +73,27 @@ export default function Index(props: Props) {
           fontSize="xs"
           textColor={useColorModeValue('gray.400', 'gray.500')}
         >
-          {handleDisplayMenuName(props.dish)}
+          {HandleDisplayMenuName(props.dish)}
         </Text>
         <Flex alignItems="start" gap="10px">
           <Box
-            minW="3rem"
-            minH="3rem"
-            maxW="3rem"
-            maxH="3rem"
-            width="3rem"
-            height="3rem"
-            borderRadius="50%"
-            overflow="hidden"
+            minH={'60px'}
+            minW={'60px'}
             position="relative"
-            boxShadow="base"
             onClick={onOpen}
             cursor="pointer"
           >
             <Image
-              src={handleDisplayedImage()}
-              layout="responsive"
+              src={props.dish.imageId ? URL : placeHolderURL}
               alt="picture of food"
-              width="3rem"
-              height="3rem"
+              width={60}
+              height={60}
+              style={{
+                borderRadius: '50%',
+                boxShadow: 'base',
+                minHeight: '60px',
+                minWidth: '60px'
+              }}
             />
           </Box>
           <Flex

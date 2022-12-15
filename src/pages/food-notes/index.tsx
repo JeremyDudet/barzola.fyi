@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import { trpc } from '../../utils/trpc'
 import {
   Heading,
@@ -76,29 +76,31 @@ export default function Index() {
   const updateDish = trpc.useMutation('dishes.updateDish')
   const deleteDish = trpc.useMutation('dishes.deleteDish')
 
-  const allergens = getAllergens.data // grab all the allergens
-
   const [filteredMenuIds, setFilteredMenuIds] = useState<string[]>()
 
   const { isOpen, onOpen, onClose } = useDisclosure()
 
+  const menuIds = useMemo(
+    () => getFoodMenus.data?.map((menu: any) => menu.id),
+    [getFoodMenus.data]
+  )
+
+  const allergens = useMemo(() => getAllergens.data, [getAllergens.data])
+
   useEffect(() => {
     // when food menus are loaded, set all of them to filteredMenus
-    const menuIds: string[] = []
-    getFoodMenus.data?.forEach((menu: any) => menuIds.push(menu.id))
     setFilteredMenuIds(menuIds)
-  }, [getFoodMenus.data])
+  }, [menuIds])
 
   const handleDishDelete = useCallback(
     async (uid: string) => {
-      await deleteDish.mutateAsync(
-        { id: uid },
-        {
-          onSuccess: () => {
-            getActiveDishes.refetch()
-          }
-        }
-      )
+      try {
+        await deleteDish.mutateAsync({ id: uid })
+        getActiveDishes.refetch()
+      } catch (error) {
+        // handle error
+        console.log(error)
+      }
     },
     [deleteDish, getActiveDishes]
   )
@@ -106,35 +108,41 @@ export default function Index() {
   // update the dishes state and also grab the image id for cloudinary
   const handleDishUpdate = useCallback(
     async (data: UpdateDish) => {
-      await updateDish.mutateAsync(data, {
-        onSuccess: () => {
-          getActiveDishes.refetch()
+      try {
+        const updatedDish = await updateDish.mutateAsync(data)
+        if (updatedDish && updatedDish.imageId) {
+          // if there is an image id, delete it from cloudinary
+          // TODO: delete image from cloudinary
         }
-      })
+        getActiveDishes.refetch()
+      } catch (error) {
+        // handle error
+        console.log(error)
+      }
     },
     [updateDish, getActiveDishes]
   )
 
   const handleCreateDish = useCallback(
     async (data: NewDish) => {
-      await createDish.mutateAsync(data, {
-        onSuccess: () => {
-          getActiveDishes.refetch()
-        }
-      })
+      try {
+        await createDish.mutateAsync(data, {
+          onSuccess: () => {
+            // regresh the getActiveDishes query to show the new dish
+            getActiveDishes.refetch()
+          },
+          onError: error => {
+            // handle error
+            console.log(error)
+          }
+        })
+      } catch (error) {
+        // handle error
+        console.log(error)
+      }
     },
     [createDish, getActiveDishes]
   )
-
-  if (!user.firstName) return <LoginForm /> // if user is not logged in, return Auth component
-
-  if (!getFoodMenus.data || !getActiveDishes.data || !allergens) {
-    return (
-      <Center paddingTop={16}>
-        <Spinner size="xl" />
-      </Center>
-    )
-  }
 
   // grab all the dishes that belong to a specific menu
   function grabFilteredDishes(menuId: any) {
@@ -153,14 +161,23 @@ export default function Index() {
   }
 
   // grab a menu's name from the menu id
-  function grabMenuName(menuId: string) {
-    let menuName = ''
+  // Create an object that maps menuIDs to menu names
+  const menuIdToName = useMemo(() => {
+    const menuIdToName: Record<string, string> = {}
     getFoodMenus.data?.forEach((menu: any) => {
-      if (menu.id === menuId) {
-        menuName = menu.name
-      }
+      menuIdToName[menu.id] = menu.name
     })
-    return menuName
+    return menuIdToName
+  }, [getFoodMenus.data])
+
+  if (!user.firstName) return <LoginForm /> // if user is not logged in, return Auth component
+
+  if (!getFoodMenus.data || !getActiveDishes.data || !allergens) {
+    return (
+      <Center paddingTop={16}>
+        <Spinner size="xl" />
+      </Center>
+    )
   }
 
   return (
@@ -203,7 +220,7 @@ export default function Index() {
         <Stack spacing={8} pt={4}>
           {filteredMenuIds?.map(id => (
             <Box key={id}>
-              <Heading>{grabMenuName(id)}</Heading>
+              <Heading>{menuIdToName[id]}</Heading>
               <Stack spacing={4}>
                 {grabFilteredDishes(id).length > 0 ? (
                   grabFilteredDishes(id).map((dish: any) => (

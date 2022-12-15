@@ -86,32 +86,25 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
   )
   // loop through all allergens and set the state to an array of their ids
 
-  const allergenIds = props.dish?.allergens?.map((allergen: any) => allergen.id) // return the id of each allergen
+  const allergenIds = useMemo(
+    () => props.dish?.allergens?.map((allergen: any) => allergen.id),
+    [props.dish]
+  )
   const [allergens, setAllergens] = useState(allergenIds)
 
   // loop through all menus and set the state to an array of their ids
-  const menuIds = props.dish?.menu?.map((menu: any) => menu.id)
+  const menuIds = useMemo(
+    () => props.dish?.menu?.map((menu: any) => menu.id),
+    [props.dish]
+  )
   const [menus, setMenus] = useState(menuIds)
 
   const [price, setPrice] = useState(props.dish.price)
   const format = (val: number) => `$` + val
-  const [isWriting, setIsWriting] = useState(false)
+  const [isWritting, setIsWritting] = useState(false)
 
-  // reset the form when the modal is closed
-  // useEffect(() => {
-  //   if (!props.isOpen) {
-  //     setName(props.dish.name)
-  //     setDescription(props.dish.description)
-  //     setAdvertisedDescription(props.dish.advertisedDescription)
-  //     setAllergens(props.dish?.allergens?.map((allergen: any) => allergen.id))
-  //     setMenus(props.dish?.menu?.map((menu: any) => menu.id))
-  //     setPrice(props.dish.price)
-  //     setSelectedFile(null)
-  //   }
-  // }, [props.isOpen, props.dish])
-
-  // check to see if the user has edited the form
   useEffect(() => {
+    // check if the form has been edited
     if (
       selectedFile ||
       name !== props.dish.name ||
@@ -121,9 +114,9 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
       menus !== menuIds ||
       allergens !== allergenIds
     ) {
-      setIsWriting(true)
+      setIsWritting(true) // set isWritting to true if the form has been edited
     } else {
-      setIsWriting(false)
+      setIsWritting(false) // set isWritting to false if the form has not been edited
     }
   }, [
     selectedFile,
@@ -131,15 +124,12 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
     description,
     advertisedDescription,
     price,
-    allergens,
     menus,
-    props.dish.name,
-    props.dish.description,
-    props.dish.advertisedDescription,
-    props.dish.price,
-    allergenIds,
-    menuIds
-  ])
+    allergens,
+    props.dish,
+    menuIds,
+    allergenIds
+  ]) // add any dependencies as the second argument
 
   // reset the form to the original values when the user clicks cancel
   const clearForm = () => {
@@ -150,13 +140,13 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
     setMenus(props.dish?.menu?.map((menu: any) => menu.id))
     setPrice(props.dish.price)
     setSelectedFile(null)
-    setIsWriting(false)
+    setIsWritting(false)
   }
 
   // check if the user has edited the dish, and if so, confirm that they want to discard their changes
   const handleClose = () => {
     // if the user has edited the form, ask them if they want to close the modal
-    if (isWriting) {
+    if (isWritting) {
       const confirmClose = confirm(
         'Are you sure you want to close? Your changes will not be saved.'
       )
@@ -213,54 +203,56 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
 
   // this function gets called when the user clicks the submit button
   const handleUpdate = async () => {
-    if (selectedFile) {
-      // if there is a new image selected, upload it to cloudinary
-      // upload the image to cloudinary
-      const imageid = await uploadImage(selectedFile)
-      // update the dish in the database
-      const data = {
-        id: props.dish.id,
-        name,
-        description,
-        advertisedDescription,
-        price,
-        imageId: imageid,
-        menu: formatIntoArrayOfObjects(menus),
-        menuSection: props.dish.menuSection,
-        lastEditedById: props.uid,
-        allergens: formatIntoArrayOfObjects(allergens)
+    try {
+      if (selectedFile) {
+        // if there is a new image selected, upload it to cloudinary
+        // upload the image to cloudinary
+        const imageid = await uploadImage(selectedFile)
+        // update the dish in the database
+        const data = {
+          id: props.dish.id,
+          name,
+          description,
+          advertisedDescription,
+          price,
+          imageId: imageid,
+          menu: formatIntoArrayOfObjects(menus),
+          menuSection: props.dish.menuSection,
+          lastEditedById: props.uid,
+          allergens: formatIntoArrayOfObjects(allergens)
+        }
+        props.handleDishUpdate(data).then(() => {
+          console.log('Dish updated')
+        })
+        props.onClose()
+      } else {
+        console.log('no image selected')
+        // update the dish in the database
+        const data = {
+          id: props.dish.id,
+          name,
+          description,
+          advertisedDescription,
+          price,
+          imageId: props.dish.imageId,
+          menu: formatIntoArrayOfObjects(menus),
+          menuSection: props.dish.menuSection,
+          lastEditedById: props.uid,
+          allergens: formatIntoArrayOfObjects(allergens)
+        }
+        props.handleDishUpdate(data).then(() => {
+          console.log('Dish updated')
+        })
+        props.onClose()
       }
-      props.handleDishUpdate(data).then(() => {
-        console.log('Dish updated')
-      })
-      props.onClose()
-    } else {
-      console.log('no image selected')
-      // update the dish in the database
-      const data = {
-        id: props.dish.id,
-        name,
-        description,
-        advertisedDescription,
-        price,
-        imageId: props.dish.imageId,
-        menu: formatIntoArrayOfObjects(menus),
-        menuSection: props.dish.menuSection,
-        lastEditedById: props.uid,
-        allergens: formatIntoArrayOfObjects(allergens)
-      }
-      props.handleDishUpdate(data).then(() => {
-        console.log('Dish updated')
-      })
-      props.onClose()
-      // display a success toast
+    } catch (error: any) {
+      console.log(error)
       toast({
-        title: 'Dish Updated',
-        description: 'Your dish has been created',
-        status: 'info',
+        title: 'Error updating dish',
+        description: error.message,
+        status: 'error',
         duration: 5000,
-        isClosable: true,
-        position: 'top'
+        isClosable: true
       })
     }
   }
@@ -313,6 +305,32 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
   const formatIntoArrayOfObjects = (ids: any) => {
     return ids.map((id: any) => {
       return { id: id }
+    })
+  }
+
+  async function handleSubmit(event: any) {
+    event.preventDefault()
+
+    // update the dish
+    await handleUpdate()
+
+    // reset the form
+    clearForm()
+
+    // set isWriting to false after updating the dish
+    setIsWritting(false)
+
+    // close the modal
+    props.onClose()
+
+    // display a success toast
+    toast({
+      title: 'Dish Updated',
+      description: 'Your dish has been created',
+      status: 'info',
+      duration: 5000,
+      isClosable: true,
+      position: 'top'
     })
   }
 
@@ -471,7 +489,7 @@ function UpdateFoodNoteModal(props: UpdateFoodModalProps) {
               <Button colorScheme="gray" mr={3} onClick={handleClose}>
                 Cancel
               </Button>
-              <Button colorScheme="blue" onClick={handleUpdate}>
+              <Button colorScheme="blue" onClick={handleSubmit}>
                 Save
               </Button>
             </Box>
