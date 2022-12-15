@@ -55,6 +55,11 @@ function NewUserModal({ handleCreateUser, isOpen, onClose }: Props) {
   const [alias, setAlias] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [authLevel, setAuthLevel] = React.useState('user')
+  const [email, setEmail] = React.useState('')
+  const [birthDate, setBirthDate] = React.useState(new Date())
+  const [phoneNumber, setPhoneNumber] = React.useState('')
+  const [status, setStatus] = React.useState('')
+  const [profileImageId, setProfileImageId] = React.useState('')
   const [isWriting, setIsWriting] = React.useState(false)
 
   useEffect(() => {
@@ -100,7 +105,12 @@ function NewUserModal({ handleCreateUser, isOpen, onClose }: Props) {
         lastName,
         alias,
         password,
-        auth: authLevel
+        auth: authLevel,
+        email,
+        birthDate,
+        phoneNumber,
+        status,
+        profileImageId
       })
       clearForm()
       onClose()
