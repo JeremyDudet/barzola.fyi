@@ -1,9 +1,6 @@
-# Large ToDo's
-
-# F.I.R.S.T. Pinciples
-
-- Fast
-- Isolated / Independent
-- Repeatable
-- Self-Validating
-- Thorough and Timely
+![Screenshot 2023-02-07 at 4 25 43 PM](https://user-images.githubusercontent.com/10752638/217398695-5946da67-135d-42f6-b747-3af362384941.jpg)
+![Screenshot 2023-02-07 at 4 24 27 PM](https://user-images.githubusercontent.com/10752638/217398708-5f465bc1-565b-4836-b582-88817cdd377e.jpg)
+![Screenshot 2023-02-07 at 4 24 57 PM](https://user-images.githubusercontent.com/10752638/217398717-74b162d1-78da-439c-8113-8d60a77aebcf.jpg)
+![Screenshot 2023-02-07 at 4 24 44 PM](https://user-images.githubusercontent.com/10752638/217398725-39be6b2c-f621-4673-9787-b6960855c788.jpg)
+![Screenshot 2023-02-07 at 4 25 08 PM](https://user-images.githubusercontent.com/10752638/217398728-6fc6df34-ea7f-4bf3-a371-d3f6c9c33a52.jpg)
+![Screenshot 2023-02-07 at 4 25 27 PM](https://user-images.githubusercontent.com/10752638/217398742-f0c6e26d-bf65-4f6a-8b79-85d1729f364a.jpg)
